@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Job Market Analytics & Cloud Pipeline Project</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --secondary: #1e293b;
+            --accent: #38bdf8;
+            --accent-hover: #0284c7;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --sf-blue: #29b5e8;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            background-color: var(--bg);
+            color: var(--text-main);
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        header {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid var(--border);
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        header h1 { font-size: 2.4rem; margin-bottom: 10px; font-weight: 800; color: #fff; }
+        header p { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 20px; }
+        .meta { font-size: 0.95rem; color: var(--text-muted); display: flex; gap: 20px; flex-wrap: wrap; }
+        .meta strong { color: var(--accent); }
+
+        .nav-links {
+            margin-top: 25px;
+            display: flex;
+            gap: 15px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            background: var(--accent);
+            color: var(--primary);
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(56, 189, 248, 0.2);
+        }
+        .btn:hover { background: #7dd3fc; transform: translateY(-1px); }
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            box-shadow: none;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.05); color: #fff; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+        }
+        @media (max-width: 850px) { .grid { grid-template-columns: 1fr; } }
+
+        .section {
+            background: var(--card-bg);
+            padding: 35px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h2 { color: #fff; margin-bottom: 20px; font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
+        h2::before { content: ''; display: inline-block; width: 4px; height: 20px; background: var(--accent); border-radius: 2px; }
+        p { margin-bottom: 15px; color: var(--text-muted); }
+        ul { margin-bottom: 15px; padding-left: 20px; color: var(--text-muted); }
+        li { margin-bottom: 8px; }
+
+        .tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
+        .tag { background: #334155; color: #f1f5f9; padding: 4px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; }
+        .tag-tech { background: rgba(56, 189, 248, 0.1); color: var(--accent); border: 1px solid rgba(56, 189, 248, 0.2); }
+
+        .metric-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+        .metric-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .metric-val { font-size: 2rem; font-weight: 800; color: var(--accent); margin-bottom: 5px; }
+        .metric-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .diagram-box {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        .diagram-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+        .diagram-caption { color: var(--text-muted); font-size: 0.85rem; margin-top: 10px; font-style: italic; }
+
+        /* Custom pure CSS architecture visualization fallback if image isn't loaded */
+        .pipeline-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 500px;
+            margin: 20px auto;
+        }
+        .flow-step {
+            background: #1e293b;
+            border: 1px solid var(--accent);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .flow-arrow { color: var(--accent); font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Data Job Market Analysis & Cloud Pipeline</h1>
+        <p>An End-to-End Enterprise Data Engineering & Business Intelligence Project</p>
+        <div class="meta">
+            <div>👤 <strong>Engineer:</strong> Ha Tran</div>
+            <div>🛠️ <strong>Core Stack:</strong> Python, Snowpark, Snowflake DW, Power BI, SQL</div>
+            <div>📊 <strong>Scale:</strong> 12,000+ Live Postings</div>
+        </div>
+        <div class="nav-links">
+            <a href="https://github.com/HaTranUSF/Hospital-Administrator-Database" class="btn" target="_blank">📁 View GitHub Source</a>
+            <a href="#metrics" class="btn btn-secondary">📈 View Insights</a>
+        </div>
+    </header>
+
+    <div class="grid">
+        <div class="main-content">
+            <div class="section">
+                <h2>Project Architecture & Blueprint</h2>
+                <p>This initiative implements a resilient ELT pipeline infrastructure designed to process high-velocity, unstructured market data. By moving away from local processing, the configuration provisions enterprise workflows directly inside cloud instances.</p>
+                
+                <div class="tag-row">
+                    <span class="tag tag-tech">Python API Extraction</span>
+                    <span class="tag tag-tech">Snowpark Ingestion</span>
+                    <span class="tag tag-tech">Snowflake Data Warehousing</span>
+                    <span class="tag tag-tech">One-Hot Feature Encoding</span>
+                </div>
+
+                <div class="diagram-box">
+                    <img src="dashboard_preview.png" alt="Power BI Analytical Executive Dashboard Preview" class="diagram-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div style="display:none;" class="fallback-pipeline">
+                        <div class="pipeline-flow">
+                            <div class="flow-step" style="border-color: #cbd5e1;">Raw Unstructured Data / API Sources</div>
+                            <div class="flow-arrow">⬇️ [Python Request Pipelines]</div>
+                            <div class="flow-step" style="border-color: var(--sf-blue);">Snowpark & Snowflake Data Ingestion</div>
+                            <div class="flow-arrow">⬇️ [Pandas Cleaning / Tokenization Matrix]</div>
+                            <div class="flow-step" style="border-color: var(--accent);">Structured Tables (JOB_POSTINGS, JOB_SKILLS)</div>
+                            <div class="flow-arrow">⬇️ [Direct Snowflake BI Connector]</div>
+                            <div class="flow-step" style="border-color: #22c55e;">Power BI Interactive Dashboard Layer</div>
+                        </div>
+                    </div>
+                    <div class="diagram-caption">Figure 1: Complete end-to-end cloud pipeline architecture and downstream analytics dashboard interface.</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Technical Execution Narrative</h2>
+                <h3>Phase 1: Cloud Warehousing & Target Ingestion</h3>
+                <p>Utilizing Python API methods, raw unstructured elements were dynamically retrieved and parsed. To build enterprise durability, connections were established into <strong>Snowflake</strong> environments using <code>snowflake.connector</code> and custom database context wrappers. Data records were piped securely into staging matrices using bulk transaction handlers (`write_pandas`).</p>
+
+                <h3>Phase 2: Mathematical Normalization & Matrix Engineering</h3>
+                <p>To identify explicit keyword matching patterns within text summaries, tokenized matrix parsing routines were executed via Python. Raw text fields were systematically evaluated using targeted matching rules to create precise one-hot encoded flags for business-critical skill categories, including <code>python</code>, <code>sql</code>, <code>aws</code>, and <code>machine learning</code>.</p>
+
+                <h3>Phase 3: Executive Reporting Layers</h3>
+                <p>The structured, query-optimized Snowflake views were connected directly to professional dashboard layers. This allows non-technical stakeholders to slice metrics by seniority level, regional constraints, or skill clusters in real time.</p>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="section" id="metrics" style="padding: 25px;">
+                <h2>Market Highlights</h2>
+                <div class="metric-cards" style="grid-template-columns: 1fr;">
+                    <div class="metric-card">
+                        <div class="metric-val">12,000+</div>
+                        <div class="metric-label">Processed Listings</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-val">33.5%</div>
+                        <div class="metric-label">Data Analyst Volume</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-val">Top Tier</div>
+                        <div class="metric-label">SQL & Python Dominance</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section" style="padding: 25px;">
+                <h2>Engineering Wins</h2>
+                <ul style="padding-left: 15px; font-size: 0.9rem;">
+                    <li>Successfully built an automated, scalable pipeline that shifts data storage away from local files to a fully transactional <strong>Snowflake Data Warehouse</strong> instance.</li>
+                    <li>Developed feature-engineered keyword arrays to transform multi-line unstructured text fields into highly clean, structured data categories.</li>
+                    <li>Designed an enterprise-ready dashboard layout optimized for tracking live labor market indicators.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
