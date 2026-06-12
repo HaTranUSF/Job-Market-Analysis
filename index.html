@@ -127,7 +127,6 @@
         }
         .diagram-caption { color: var(--text-muted); font-size: 0.85rem; margin-top: 10px; font-style: italic; }
 
-        /* Custom pure CSS architecture visualization fallback if image isn't loaded */
         .pipeline-flow {
             display: flex;
             flex-direction: column;
@@ -158,15 +157,15 @@
             <div>📊 <strong>Scale:</strong> 12,000+ Live Postings</div>
         </div>
         <div class="nav-links">
-            <a href="https://github.com/HaTranUSF/Hospital-Administrator-Database" class="btn" target="_blank">📁 View GitHub Source</a>
-            <a href="#metrics" class="btn btn-secondary">📈 View Insights</a>
+            <a href="https://github.com/HaTranUSF/Job-Market-Analysis" class="btn" target="_blank">📁 View GitHub Repository</a>
+            <a href="https://hatranusf.github.io/Job-Market-Analysis/" class="btn btn-secondary" target="_blank">✨ Live Production Deployment</a>
         </div>
     </header>
 
     <div class="grid">
         <div class="main-content">
             <div class="section">
-                <h2>Project Architecture & Blueprint</h2>
+                <h2>Project Architecture & Executive Insight Matrix</h2>
                 <p>This initiative implements a resilient ELT pipeline infrastructure designed to process high-velocity, unstructured market data. By moving away from local processing, the configuration provisions enterprise workflows directly inside cloud instances.</p>
                 
                 <div class="tag-row">
@@ -177,7 +176,8 @@
                 </div>
 
                 <div class="diagram-box">
-                    <img src="dashboard_preview.png" alt="Power BI Analytical Executive Dashboard Preview" class="diagram-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <!-- Updated image tracking attribute to map directly to dashboard.png -->
+                    <img src="dashboard.png" alt="Power BI Analytical Executive Dashboard View" class="diagram-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                     <div style="display:none;" class="fallback-pipeline">
                         <div class="pipeline-flow">
                             <div class="flow-step" style="border-color: #cbd5e1;">Raw Unstructured Data / API Sources</div>
@@ -189,7 +189,7 @@
                             <div class="flow-step" style="border-color: #22c55e;">Power BI Interactive Dashboard Layer</div>
                         </div>
                     </div>
-                    <div class="diagram-caption">Figure 1: Complete end-to-end cloud pipeline architecture and downstream analytics dashboard interface.</div>
+                    <div class="diagram-caption">Figure 1: Fully compiled cloud data pipeline layout & executive analytical dashboard (loaded via dashboard.png).</div>
                 </div>
             </div>
 
