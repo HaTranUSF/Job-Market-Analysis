@@ -43,7 +43,7 @@ A pipeline that turns that mess into a structured dataset and a dashboard that a
 
 - **Ingestion:** Python, USAJobs API, `requests`
 - **Transformation:** Python, pandas, NumPy
-- **Storage:** PostgreSQL, SQLAlchemy, psycopg2
+- **Storage:** Snowflake, PostgreSQL, SQLAlchemy, psycopg2
 - **Reporting:** Power BI
 - **Config/secrets:** python-dotenv
 
