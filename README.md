@@ -1,50 +1,61 @@
-# 📊 Data Job Market Analysis & Cloud Data Pipeline
+# Federal Data Job Market Pipeline
 
-An end-to-end data engineering and analytics project that builds an automated ETL/ELT pipeline to extract, transform, and analyze over 12,000 global tech job postings. Features automated unstructured-to-structured processing via Python, a centralized data warehouse in Snowflake, and interactive business intelligence dashboarding.
+An automated pipeline that pulls live federal data-role job postings from the USAJobs API, cleans and classifies them, loads them into PostgreSQL, and surfaces the results in an interactive Power BI dashboard.
 
-## 🔗 Project Links
-- **✨ Live Web Portfolio View:** [Explore the Interactive Specification Site](index.html)
-- **📁 Core Repository Source:** [GitHub Source File Index](https://github.com/HaTranUSF/Data-Job-Market-Analysis)
+## The Business Problem
 
----
+The federal government posts thousands of data-related jobs on USAJobs, but the postings are messy: the same role gets fifty different title variations ("Data Analyst," "Program Analyst (Data Analyst)," "IT Specialist (Data Management)"), pay is listed as either an annual range or an hourly rate depending on the agency, and location fields mix single cities, "Multiple Locations," and international postings with no consistent format. Anyone trying to answer a simple question, like which agencies are hiring the most data talent right now, where the pay is highest, or which roles are growing, has to manually dig through hundreds of listings one at a time. There's no clean, queryable view of the federal data job market.
 
-## 📋 Project Overview (STAR Breakdown)
+## What I Built
 
-### 🔹 Situation
-Navigating the rapidly evolving data career landscape requires clear visibility into market trends, salary distributions, and tooling prerequisites. With thousands of scattered, unstructured job postings updated daily, manually assessing which skills (e.g., Python, SQL, AWS) maximize career ROI is highly inefficient. 
+A pipeline that turns that mess into a structured dataset and a dashboard that answers those questions directly.
 
-### 🔹 Task
-Design and execute a scalable cloud architecture capable of ingestion, normalization, schema modeling, and downstream semantic reporting for over 12,000 industry job listings. The project goals were twofold: extract actionable labor market insights and showcase advanced data pipeline capabilities.
+**Extract:** Pulled postings from the USAJobs API across 12 data-related role searches (data analyst, data engineer, data scientist, business analyst, ML engineer, analytics engineer, and others), paginating through results until each search was exhausted. This returned 5,588 raw postings.
 
-### 🔹 Action
-Systematically engineered an ELT/ETL framework split across three distinct tiers:
-1. **API Ingestion & Schema Mapping:** Programmatically targeted data sources via Python APIs, translating noisy, unstructured JSON metadata blocks into clean tabular staging environments.
-2. **Cloud Data Warehousing (Snowflake & Snowpark):** Managed database connectivity via the Snowflake Connector and `snowflake-sqlalchemy`. Created a scalable target data schema utilizing optimized Python routines (`write_pandas`) to securely stream bulk rows directly into Snowflake data tables (`JOB_POSTINGS`, `JOB_SKILLS`).
-3. **Data Cleansing & Feature Engineering:** Developed an algorithmic data sanitization workflow in Jupyter notebooks (`Pipeline_for_Data_Job_Market_Analysis.ipynb`). Engineered one-hot-encoded token matrices for high-demand skills (Python, SQL, AWS, Machine Learning) and classified messy text records into standardized organizational buckets (`Data Analyst`, `Data Engineer`, `Data Scientist`, `Machine Learning Engineer`).
-4. **Business Intelligence Reporting:** Connected the optimized Snowflake analytical layer to Power BI to deliver interactive diagnostic dashboards mapping market share, geographical heatmaps, and role-specific skill frequencies.
+**Transform:**
+- Deduplicated on posting ID (5,588 → 2,839 unique postings)
+- Classified each posting into a standardized role bucket using a rules-based function on the job title, filtering out non-data roles that slipped into the search results (mechanics, drivers, clerks, etc.)
+- Normalized salary: some postings list an hourly rate instead of an annual salary, so I detected and converted those to be comparable
+- Standardized dates, employment type codes, and job grade into readable formats
+- Split location into city and state, and filtered out non-US and malformed entries, landing on 816 clean, US-based postings with complete data across all fields
 
-### 🔹 Result
-- **Market Discovery:** Identified that **Data Analyst** roles dominate total market volume at **33.5%**, closely tracked by Data Engineering positions.
-- **Skill Dominance:** Quantified that **SQL** and **Python** represent absolute baseline baseline skills, maintaining standard prerequisite dominance across more than 65% of all aggregated data listings.
-- **Architecture Efficiency:** Replaced rigid local spreadsheet tracking with an automated, transactional cloud data warehouse architecture capable of processing thousands of raw multi-line strings effortlessly.
+**Load:** Wrote the cleaned dataset into a PostgreSQL table, with logic to check for an existing table, merge in new postings, and drop duplicates on ID, so re-running the pipeline updates the dataset instead of overwriting it from scratch.
 
----
+**Report:** Connected Power BI to the Postgres table to build a dashboard with a US map of job postings by state, a US map of average salary by state, salary by role, salary by employment type, a compensation trend line, and nationwide job counts.
 
-## 🛠️ Tech Stack & Architecture Matrix
-- **Language Layer:** Python (Pandas, NumPy, SQLAlchemy)
-- **Cloud Infrastructure:** Snowflake Data Warehouse (Snowpark API integration)
-- **Data Visualization & BI:** Power BI, Tableau Desktop
-- **Development Tooling:** Jupyter Notebooks, Git Version Control
+## Key Decisions Along the Way
 
----
+**Snowflake to Postgres.** I originally built this on Snowflake, but the compute cost wasn't justified for a personal project at this data volume. I moved the pipeline to Postgres, which does the job for free at this scale without giving up the incremental-load pattern.
 
-## 📂 Repository Blueprint & Execution Sequence
+**Skill extraction didn't make the cut.** I wanted the dashboard to also show which specific skills (Python, SQL, AWS, etc.) show up most across postings. I tried two approaches: TF-IDF scoring on the job descriptions, and a regex keyword match against a fixed skill list. Neither produced clean results; TF-IDF surfaced generic high-frequency words instead of real skills, and the regex list missed skills phrased differently across postings. Rather than ship a noisy skills chart, I left it out of this version. [Next step: rebuild this with a better keyword-matching approach, or fine-tune the skill list against the actual description text before adding it back to the dashboard.]
+
+## Results
+
+- Pulled 5,588 postings across 12 federal data-role searches, deduplicated and cleaned down to 816 complete, US-based listings
+- [Which role bucket has the most postings, e.g. "Data Analyst roles made up X% of postings"]
+- [Which state(s) have the highest average salary / most postings]
+- [Any notable salary gap between employment types, e.g. full-time vs. intermittent]
+
+*(Fill in the bracketed lines above with the actual numbers from your dashboard once you have it open. I didn't want to guess at figures I can't see.)*
+
+## Tech Stack
+
+- **Ingestion:** Python, USAJobs API, `requests`
+- **Transformation:** Python, pandas, NumPy
+- **Storage:** PostgreSQL, SQLAlchemy, psycopg2
+- **Reporting:** Power BI
+- **Config/secrets:** python-dotenv
+
+## Repository Structure
 
 ```text
-├── Pipeline_for_Data_Job_Market_Analysis.ipynb   # Cloud pipeline, connection, & Snowflake loading script
-├── Job_Market_Analysis.ipynb                     # Local Exploratory Data Analysis & Feature Engineering
-├── job_postings.csv                              # Raw baseline tracking index (12,000+ rows)
-├── job_skills.csv                                # Raw extracted keyword token files
-├── dashboard_preview.png                         # Screenshot of your live Power BI Dashboard
-├── index.html                                    # Standalone Portfolio landing page code
-└── README.md                                     # Main repository index documentation
+├── Pipeline_for_Data_Job_Market_Analysis.ipynb   # Extract, transform, and load into Postgres
+├── Federal_Data_Job_Market_Analysis.pbix         # Power BI dashboard
+└── README.md
+```
+
+## What's Next
+
+- Add a working skill-extraction step so the dashboard can show top in-demand skills by role
+- Automate the pipeline to run on a schedule instead of manually
+- Expand beyond federal postings if a broader private-sector comparison is useful
