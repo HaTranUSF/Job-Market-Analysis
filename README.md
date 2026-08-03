@@ -31,12 +31,13 @@ A pipeline that turns that mess into a structured dataset and a dashboard that a
 
 ## Results
 
-- Pulled 5,588 postings across 12 federal data-role searches, deduplicated and cleaned down to 816 complete, US-based listings
-- [Which role bucket has the most postings, e.g. "Data Analyst roles made up X% of postings"]
-- [Which state(s) have the highest average salary / most postings]
-- [Any notable salary gap between employment types, e.g. full-time vs. intermittent]
-
-*(Fill in the bracketed lines above with the actual numbers from your dashboard once you have it open. I didn't want to guess at figures I can't see.)*
+- Pulled 5,588 postings across 12 federal data-role searches and cleaned them down to a final dataset of 950 actively hiring, US-based listings
+- **Data Analyst (34.5%) and Data Engineer (32.1%) dominate the market**, together accounting for roughly two-thirds of all actively hiring federal data postings
+- **Data Specialist (~12.3%) and Data Scientist (11%) form the next tier**, with data architect, research analyst, business analyst, database administrator, data warehouse engineer, and machine learning engineer each making up a small remaining slice
+- **Virginia leads both job volume and average salary**, consistent with the concentration of DC-metro federal agencies headquartered there
+- **Shift Work postings carry the highest average salary ($122.4K)**, slightly ahead of Full-Time ($120K) and On-Call ($108.9K), while Part-Time trails well behind at $39.3K, a useful counter to the assumption that full-time roles always pay best
+- **Average salary is fairly consistent across roles** rather than showing a dramatic gap between, say, Data Analyst and Machine Learning Engineer, suggesting federal pay bands compress role-based salary variation more than the private sector does
+- **Compensation fluctuated notably month to month** (roughly $95K to $138K between Oct 2025 and Jul 2026) without a clean upward or downward trend, which tracks with a relatively small monthly posting volume rather than a real seasonal signal
 
 ## Tech Stack
 
@@ -56,6 +57,7 @@ A pipeline that turns that mess into a structured dataset and a dashboard that a
 
 ## What's Next
 
+- Fix the "Nationwide Job Counts" card, which is currently rendering blank on the dashboard
 - Add a working skill-extraction step so the dashboard can show top in-demand skills by role
 - Automate the pipeline to run on a schedule instead of manually
 - Expand beyond federal postings if a broader private-sector comparison is useful
