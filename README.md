@@ -2,7 +2,7 @@
 
 An automated pipeline that pulls live federal data-role job postings from the USAJobs API, cleans and classifies them, loads them into PostgreSQL, and surfaces the results in an interactive Power BI dashboard.
 
-# [Link to my notebook](https://github.com/HaTranUSF/Job-Market-Analysis/blob/main/Pipeline_for_Data_Job_Market_Analysis.ipynb)
+ [Link to my notebook](https://github.com/HaTranUSF/Job-Market-Analysis/blob/main/Pipeline_for_Data_Job_Market_Analysis.ipynb)
 
 ## The Business Problem
 
