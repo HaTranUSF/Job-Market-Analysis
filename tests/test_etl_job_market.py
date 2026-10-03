@@ -76,9 +76,16 @@ class TransformJobsTests(unittest.TestCase):
             ]
         )
 
+        duplicate_content = raw.iloc[[0]].copy()
+        duplicate_content["id"] = "9999"
+        raw = pd.concat([duplicate_content, raw], ignore_index=True)
         postings, skills = transform_jobs(raw)
 
         self.assertEqual(postings["id"].tolist(), ["1001", "1002"])
+        self.assertFalse(postings["id"].duplicated().any())
+        self.assertFalse(
+            postings.drop(columns="id").duplicated().any()
+        )
         first = postings.iloc[0]
         self.assertEqual(first["role"], "data engineer")
         self.assertEqual(first["salary_min"], 45 * 2080)
