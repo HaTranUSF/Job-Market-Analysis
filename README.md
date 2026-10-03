@@ -8,7 +8,7 @@ The project combines a modular Python ETL pipeline, PostgreSQL database, explora
 
 ## 🔗 Project Links
 
-* **✨ Live Project Walkthrough:** [Explore the Interactive Project Page](index.html)
+* **✨ Live Project Walkthrough:** [Explore the Interactive Project Page](https://hatranusf.github.io/NextLeg/)
 * **📁 GitHub Repository:** [View the Source Code](https://github.com/HaTranUSF/Job-Market-Analysis)
 * **📊 Power BI Dashboard:** `Federal_Data_Job_Market_Analysis.pbix`
 
