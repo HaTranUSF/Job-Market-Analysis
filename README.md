@@ -16,11 +16,11 @@ The project combines a modular Python ETL pipeline, PostgreSQL database, explora
 
 # 📈 Dashboard & Analytical Findings
 
-The output is presented across a two-page Power BI dashboard combining macro-level job market intelligence with AI-driven risk evidence extraction.
+The output is presented across a two-page Power BI dashboard combining macro-level job market intelligence with an experimental AI-driven risk evidence extraction module.
 
 ### Page 1: Macro Market Overview
 
-![Federal Data Job Market Overview](Dashboard.jpg)
+![Federal Data Job Market Overview](./Dashboard.png)
 
 #### Key Findings (Macro Market):
 * **Role Dominance:** **Data Specialists** dominate active hiring volume, comprising **60.1% (1.69K)** of actively open positions, followed by **Data Analysts (16.89% / 0.48K)** and **Data Engineers (12.8% / 0.36K)**.
@@ -32,16 +32,18 @@ The output is presented across a two-page Power BI dashboard combining macro-lev
 
 ---
 
-### Page 2: GenAI Risk & Audit Extraction Module
+### Page 2: GenAI Risk & Audit Extraction (Experimental Feature)
 
-![GenAI Risk & Audit Extraction](GenAI_dashboard.png)
+![GenAI Risk & Audit Extraction](./GenAI_dashboard.png)
+
+> ⚠️ **Experimentation & Sample Size Note:** Page 2 serves as a **Proof-of-Concept (PoC)** dashboard evaluating automated LLM risk and compliance extraction. To operate within free-tier API rate limits (`15 RPM`) and control generation costs during development, processing was intentionally capped to a **pilot sample batch (26 postings)**. The infrastructure is fully designed for scalable, idempotent batch ingestion across the full PostgreSQL database.
 
 #### Key Findings (GenAI Audit & Control Pilot):
-* **Security & Financial Risk Detection:** Extracted **3 explicit mentions** of required **Security Clearances** and **3 explicit mentions** involving access to sensitive **Financial Data** within the processed pilot sample.
+* **Security & Financial Risk Detection:** Extracted **3 explicit mentions** of required **Security Clearances** and **3 explicit mentions** involving access to sensitive **Financial Data** within the pilot sample.
 * **Departmental Concentration:**
   * The **Department of the Air Force** and **Department of the Navy** led in total postings screened for audit controls.
   * **Other Agencies and Independent Organizations** demonstrated the highest concentration of explicit compliance and internal control enforcement requirements (`mentions_audit_or_controls = 1`).
-* **Zero-Hallucination Evidence:** 100% of extracted risk flags are directly grounded with exact string quotes from the raw job description text stored in PostgreSQL.
+* **Zero-Hallucination Evidence Grounding:** 100% of extracted risk flags are directly verified against verbatim quote snippets from the original job description text in PostgreSQL.
 
 ---
 
