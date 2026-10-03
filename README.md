@@ -14,6 +14,37 @@ The project combines a modular Python ETL pipeline, PostgreSQL database, explora
 
 ---
 
+# 📈 Dashboard & Analytical Findings
+
+The output is presented across a two-page Power BI dashboard combining macro-level job market intelligence with AI-driven risk evidence extraction.
+
+### Page 1: Macro Market Overview
+
+![Federal Data Job Market Overview](Dashboard.jpg)
+
+#### Key Findings (Macro Market):
+* **Role Dominance:** **Data Specialists** dominate active hiring volume, comprising **60.1% (1.69K)** of actively open positions, followed by **Data Analysts (16.89% / 0.48K)** and **Data Engineers (12.8% / 0.36K)**.
+* **Nationwide Volume:** **440** total active federal posting positions tracked across the nationwide sample.
+* **Compensation Trends:** 
+  * Average compensation peaked above **$120K** in early 2026, maintaining a stable baseline above $110K through late 2026.
+  * **Full-Time** roles command the largest slice of higher average salary bands (28.86% @ ~$116.16K average), while **Part-Time** roles average around $59.28K.
+* **High-Paying Specializations:** **Machine Learning Engineers** and **Research Analysts** yield the highest average mid-range salary tiers across federal role categories.
+
+---
+
+### Page 2: GenAI Risk & Audit Extraction Module
+
+![GenAI Risk & Audit Extraction](GenAI_dashboard.png)
+
+#### Key Findings (GenAI Audit & Control Pilot):
+* **Security & Financial Risk Detection:** Extracted **3 explicit mentions** of required **Security Clearances** and **3 explicit mentions** involving access to sensitive **Financial Data** within the processed pilot sample.
+* **Departmental Concentration:**
+  * The **Department of the Air Force** and **Department of the Navy** led in total postings screened for audit controls.
+  * **Other Agencies and Independent Organizations** demonstrated the highest concentration of explicit compliance and internal control enforcement requirements (`mentions_audit_or_controls = 1`).
+* **Zero-Hallucination Evidence:** 100% of extracted risk flags are directly grounded with exact string quotes from the raw job description text stored in PostgreSQL.
+
+---
+
 # 🎯 The Business Problem
 
 The federal data job market contains thousands of job postings with different titles, descriptions, salary formats, employment types, and locations.
@@ -47,6 +78,7 @@ We built a production-style ETL pipeline that:
 7. **Exports** database snapshots for downstream use
 8. **Analyzes** the resulting dataset through exploratory analysis
 9. **Visualizes** the results in Power BI
+10. **Optionally enriches** job-description evidence with Gemini for downstream risk analytics
 
 ```text
                  USAJOBS API
@@ -84,7 +116,6 @@ We built a production-style ETL pipeline that:
             │
             ▼
         Power BI
-```
 
 ---
 
@@ -349,6 +380,70 @@ The dashboard provides an overview of job volume and compensation patterns acros
 
 ---
 
+# GenAI Risk Evidence Extraction
+
+This opt-in enrichment demonstrates how GenAI can support an Internal Audit / Risk Analytics workflow as a **data-enrichment processor**. Gemini reads one job description at a time and extracts explicitly stated indicators—such as references to personal, financial, or health data; security clearance; regulations; audit controls; privileged access; technical skills; systems; and financial responsibilities. Each returned evidence snippet is checked against the original description before it is stored.
+
+The model is not asked to assign a risk score or decide whether a posting is fraudulent, illegal, or non-compliant. A mention is evidence for later deterministic control tests and human review, not a finding or conclusion. For example, an analyst could route postings that explicitly mention privileged access and financial systems to a control-review checklist; the model does not decide whether that access is inappropriate. Model confidence is a self-reported extraction confidence, not a calibrated probability.
+
+```mermaid
+flowchart LR
+     A[USAJOBS API] --> B[Existing Python ETL]
+     B --> C[(PostgreSQL job_skills)]
+     C --> D[genai_enrichment.py]
+     D --> E[Gemini Python SDK]
+     E --> F[Validated risk evidence]
+     F --> G[(PostgreSQL job_risk_attributes)]
+     C --> H[vw_job_risk_evidence]
+     G --> H
+     H --> I[Power BI]
+```
+
+## Storage and idempotency
+
+The enrichment module adds `job_risk_attributes`, keyed by `posting_id` and linked to `job_skills.id` with `ON DELETE CASCADE`. Boolean mention flags, JSONB lists of extracted terms/skills/systems/data types/regulations/security and financial responsibilities, JSONB evidence snippets, confidence, description hash, model/prompt version, and processing time are stored separately; the existing ETL tables and behavior are left intact. A primary key and foreign key protect row identity and referential integrity. A confidence check restricts values to 0–1, and a GIN index supports JSONB term filtering.
+
+The description hash, prompt version, and model name are checked when selecting work. Unchanged successful records are skipped; changed descriptions or model/prompt versions become eligible again. The upsert is keyed by posting ID, so reruns update the same row instead of inserting duplicates. Failed or invalid responses are logged and remain eligible for a later retry.
+
+Structured output is generated with the official `google-genai` SDK and validated with Pydantic. Missing flags/lists default to false/empty, confidence is range-checked, and unsupported evidence quotations are removed; a positive boolean without a matching source quotation is reset to false. Only the description text is sent to Gemini. The input is a USAJOBS public posting, but review Google API terms and data-handling settings before using this with non-public descriptions.
+
+## Configure and run
+
+Install the added dependencies in the existing virtual environment:
+
+```powershell
+python -m pip install -r requirements.txt
+```
+
+Add `GEMINI_API_KEY` to the local, Git-ignored `.env` file. `GEMINI_MODEL` is optional and defaults to `gemini-3.8-flash`; no credential belongs in source control. Enrichment is separate from the ordinary ETL and is not run automatically. By default it selects at most **10** unprocessed descriptions, with one Gemini request per description and a two-second interval between requests:
+
+```powershell
+python genai_enrichment.py --limit 10
+```
+
+Use `--force --limit 10` to re-enrich up to ten selected records, even when unchanged. Increase pacing with `--request-interval 5` if your project receives 429 rate-limit responses. `--force` is still limited by `--limit`; the command does not automatically send the whole database. Each description is one logical extraction; transient retries may add requests and honor Gemini's `Retry-After` header when exposed by the SDK. Model usage/cost depends on each description's token length, model pricing, and response size; consult Google's current pricing and rate limits before increasing the limit. Transient rate-limit/server failures receive capped retries; other per-record failures log the API status and message and do not stop the rest of the batch.
+
+**Model availability note:** Google's current model guide lists Gemini 2.5 Flash but restricts access to users who have actively used 2.5 models. This project account received a live 404 stating 2.5 Flash is unavailable to new users and recommending `gemini-3.8-flash`, so that is the configured default. A 503 is service-side capacity, not something the script can guarantee to avoid; bounded retries/backoff only make the run more resilient.
+
+## Power BI connection
+
+The enrichment module creates `public.vw_job_risk_evidence` alongside the new table. In Power BI Desktop, use **Get Data → PostgreSQL database**, connect to the same server/database as the ETL, and select `public.vw_job_risk_evidence`. The view left-joins risk evidence to postings and exposes posting ID, role, organization/agency, state, mention flags, evidence, confidence, model, and processing metadata. It includes unenriched postings with `is_enriched = false`; filter to `is_enriched = true` for counts and charts. Use distinct count of `posting_id` for posting counts, split/group by `role`, `state`, or `organization`, and use `evidence_snippets` as a drill-through/detail field. JSONB list columns may need expansion or conversion in Power Query depending on the PostgreSQL connector version.
+
+The `.pbix` is a binary Power BI artifact and is not modified by this change. Its current connection and semantic model could not be verified from the repository, so connect the view and add visuals in Power BI Desktop rather than assuming automatic dashboard changes. Recommended visuals are mention-flag counts for sensitive, financial, personal, health, clearance, and regulatory references; evidence counts by role/state/agency; a confidence distribution; and a table of cited evidence snippets. These are mention/evidence counts, not risk scores or compliance findings.
+
+For example, after loading the view, a distinct count measure for financial-data mentions can use:
+
+```DAX
+Financial-data postings =
+CALCULATE(
+     DISTINCTCOUNT('vw_job_risk_evidence'[posting_id]),
+     'vw_job_risk_evidence'[is_enriched] = TRUE(),
+     'vw_job_risk_evidence'[mentions_financial_data] = TRUE()
+)
+```
+
+---
+
 # 📌 Key Findings
 
 Based on the current dashboard and project analysis:
@@ -388,6 +483,8 @@ The tests cover important transformation and loading behaviors, including:
 * Date parsing
 * Location parsing
 * Skill extraction
+
+The separate `tests/test_genai_enrichment.py` suite covers structured-response validation, missing fields, evidence grounding, API retries/failure isolation, and idempotent upsert behavior. All Gemini responses are mocked in unit tests; tests never call the live API.
 
 Run the test suite with:
 
@@ -491,12 +588,18 @@ Job-Market-Analysis/
 ├── load.py
 │   └── PostgreSQL loading logic
 │
+├── genai_enrichment.py
+│   └── Optional Gemini evidence extraction, schema/view, validation,
+│       retries, and bounded command-line runner
+│
 ├── engine.py
 │   └── Database connection and schema definitions
 │
 ├── tests/
 │   └── test_etl_job_market.py
 │       └── Offline ETL tests
+│   └── test_genai_enrichment.py
+│       └── Mocked GenAI validation and failure tests
 │
 ├── experimentation/
 │   ├── Pipeline_for_Data_Job_Market_Analysis.ipynb
