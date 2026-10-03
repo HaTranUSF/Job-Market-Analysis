@@ -1,71 +1,646 @@
-# 📊 Data Job Market Analysis & Cloud Data Pipeline
+# 📊 Federal Data Job Market Analysis & ETL Pipeline
 
-An end-to-end data engineering and analytics project that builds an automated ETL/ELT pipeline to extract, transform, and analyze over 12,000 global tech job postings. Features automated unstructured-to-structured processing via Python, a centralized data warehouse in Snowflake, and interactive business intelligence dashboarding.
+An end-to-end data engineering and analytics project that collects, cleans, transforms, and analyzes federal data-related job postings from the **USAJOBS API**.
+
+The project combines a modular Python ETL pipeline, PostgreSQL database, exploratory analysis, and Power BI dashboard to turn raw federal job postings into a structured dataset for understanding **job demand, salary, geography, employment type, and role distribution** across the U.S.
+
+---
 
 ## 🔗 Project Links
-- **✨ Live Web Portfolio View:** [Explore the Interactive Specification Site](index.html)
-- **📁 Core Repository Source:** [GitHub Source File Index](https://github.com/HaTranUSF/Data-Job-Market-Analysis)
+
+* **✨ Live Project Walkthrough:** [Explore the Interactive Project Page](index.html)
+* **📁 GitHub Repository:** [View the Source Code](https://github.com/HaTranUSF/Job-Market-Analysis)
+* **📊 Power BI Dashboard:** `Federal_Data_Job_Market_Analysis.pbix`
 
 ---
 
-## 📋 Project Overview (STAR Breakdown)
+# 🎯 The Business Problem
 
-### 🔹 Situation
-Navigating the rapidly evolving data career landscape requires clear visibility into market trends, salary distributions, and tooling prerequisites. With thousands of scattered, unstructured job postings updated daily, manually assessing which skills (e.g., Python, SQL, AWS) maximize career ROI is highly inefficient. 
+The federal data job market contains thousands of job postings with different titles, descriptions, salary formats, employment types, and locations.
 
-### 🔹 Task
-Design and execute a scalable cloud architecture capable of ingestion, normalization, schema modeling, and downstream semantic reporting for over 12,000 industry job listings. The project goals were twofold: extract actionable labor market insights and showcase advanced data pipeline capabilities.
+Looking at individual postings makes it difficult to answer broader questions such as:
 
-### 🔹 Action
-Systematically engineered an ELT/ETL framework split across three distinct tiers:
-1. **API Ingestion & Schema Mapping:** Programmatically targeted data sources via Python APIs, translating noisy, unstructured JSON metadata blocks into clean tabular staging environments.
-2. **Cloud Data Warehousing (Snowflake & Snowpark):** Managed database connectivity via the Snowflake Connector and `snowflake-sqlalchemy`. Created a scalable target data schema utilizing optimized Python routines (`write_pandas`) to securely stream bulk rows directly into Snowflake data tables (`JOB_POSTINGS`, `JOB_SKILLS`).
-3. **Data Cleansing & Feature Engineering:** The earlier notebook prototype is retained under [experimentation/Pipeline_for_Data_Job_Market_Analysis.ipynb](experimentation/Pipeline_for_Data_Job_Market_Analysis.ipynb). The production ETL is implemented in the modular Python files listed below.
-4. **Business Intelligence Reporting:** Connected the optimized Snowflake analytical layer to Power BI to deliver interactive diagnostic dashboards mapping market share, geographical heatmaps, and role-specific skill frequencies.
+* Which data-related roles account for the largest share of opportunities?
+* How are opportunities distributed geographically?
+* How does compensation vary across roles?
+* How does salary differ by employment type?
+* What does the current federal data-job market look like after standardizing inconsistent source data?
 
-### 🔹 Result
-- **Market Discovery:** Identified that **Data Analyst** roles dominate total market volume at **33.5%**, closely tracked by Data Engineering positions.
-- **Skill Dominance:** Quantified that **SQL** and **Python** represent absolute baseline baseline skills, maintaining standard prerequisite dominance across more than 65% of all aggregated data listings.
-- **Architecture Efficiency:** Replaced rigid local spreadsheet tracking with an automated, transactional cloud data warehouse architecture capable of processing thousands of raw multi-line strings effortlessly.
+The challenge is therefore not simply collecting job postings. It is turning messy, semi-structured job data into a consistent dataset that can support meaningful analysis.
+
+### Business Question
+
+> **How can we build a repeatable data pipeline that transforms raw federal job postings into a reliable dataset for analyzing data-job demand, compensation, and geographic patterns?**
 
 ---
 
-## 🛠️ Tech Stack & Architecture Matrix
-- **Language Layer:** Python (Pandas, NumPy, SQLAlchemy)
-- **Cloud Infrastructure:** Snowflake Data Warehouse (Snowpark API integration)
-- **Data Visualization & BI:** Power BI, Tableau Desktop
-- **Development Tooling:** Jupyter Notebooks, Git Version Control
+# 💡 The Solution
 
----
+We built a production-style ETL pipeline that:
 
-## 📂 Repository Blueprint & Execution Sequence
+1. **Extracts** job postings from the USAJOBS API
+2. **Transforms** raw postings into standardized analytical records
+3. **Classifies** postings into data-related job categories
+4. **Normalizes** compensation and other fields
+5. **Filters** the dataset to U.S.-based data-related positions
+6. **Loads** the cleaned data into PostgreSQL
+7. **Exports** database snapshots for downstream use
+8. **Analyzes** the resulting dataset through exploratory analysis
+9. **Visualizes** the results in Power BI
 
 ```text
-├── etl_job_market.py                             # ETL command-line orchestrator
-├── extract.py                                    # USAJOBS API extraction
-├── transform.py                                  # Posting cleanup and skill extraction
-├── load.py                                       # Transactional, incremental PostgreSQL load
-├── engine.py                                     # PostgreSQL connection and table schema
-├── Job_Market_Analysis.ipynb                     # Exploratory data analysis
-├── tests/test_etl_job_market.py                  # Offline ETL transformation tests
-├── requirements.txt                              # Runtime dependencies
-├── .env.example                                  # Safe environment-variable template
-├── data/processed/                               # Generated CSV outputs (not committed)
-├── experimentation/                              # Legacy notebook and Airflow experiments
+                 USAJOBS API
+                      │
+                      ▼
+              ┌──────────────┐
+              │    Extract   │
+              │  extract.py  │
+              └──────┬───────┘
+                     │
+                     ▼
+              ┌──────────────┐
+              │   Transform  │
+              │ transform.py │
+              └──────┬───────┘
+                     │
+          ┌──────────┴──────────┐
+          │                     │
+          ▼                     ▼
+   Job Standardization     Skill Extraction
+          │                     │
+          └──────────┬──────────┘
+                     ▼
+              ┌──────────────┐
+              │     Load     │
+              │    load.py   │
+              └──────┬───────┘
+                     │
+                     ▼
+                PostgreSQL
+                     │
+            ┌────────┴────────┐
+            ▼                 ▼
+      Data Analysis       CSV Snapshots
+            │
+            ▼
+        Power BI
+```
+
+---
+
+# 📥 1. Data Extraction
+
+The pipeline uses the **USAJOBS API** to retrieve federal job postings associated with data-related roles.
+
+The extraction workflow is implemented in:
+
+```text
+extract.py
+```
+
+The pipeline searches across a defined set of data-related roles, including:
+
+* Data Analyst
+* Data Scientist
+* Data Engineer
+* Business Analyst
+* Machine Learning Engineer
+* Analytics Engineer
+* Data Specialist
+* Research Analyst
+* Business Intelligence Analyst
+* Data Architect
+* Data Warehouse Engineer
+* Database Administrator
+
+The extraction process includes several safeguards for working with an external API:
+
+* API pagination
+* Persistent HTTP connections
+* Explicit request timeouts
+* Bounded retry and backoff behavior
+* Handling of temporary API errors
+* Tracking of fetched posting IDs
+
+The recorded notebook extraction contains **5,588 raw postings** before the subsequent transformation and filtering steps.
+
+---
+
+# 🧹 2. Data Transformation
+
+Raw USAJOBS postings contain inconsistent titles, descriptions, locations, dates, salary formats, and other fields.
+
+The transformation workflow is implemented in:
+
+```text
+transform.py
+```
+
+It converts the raw API response into a structured analytical dataset.
+
+### Role Classification
+
+The pipeline applies rules-based classification to standardize job titles into data-related categories.
+
+The classification logic distinguishes roles such as:
+
+* Data Analyst
+* Data Engineer
+* Data Scientist
+* Machine Learning Engineer
+* Analytics Engineer
+* Business Analyst
+* Business Intelligence Analyst
+* Data Architect
+* Data Warehouse Engineer
+* Database Administrator
+* Data Specialist
+* Research Analyst
+
+The transformation also applies exclusions to prevent unrelated postings from being included in the analytical dataset.
+
+### Location Standardization
+
+Location information is parsed into structured geographic fields.
+
+The analysis is restricted to U.S. locations, including the 50 states and Washington, D.C.
+
+### Salary Normalization
+
+Salary information is converted into a consistent annualized representation.
+
+For salary values below `$500`, the pipeline treats the value as an hourly rate and annualizes it using:
+
+```text
+2,080 hours/year
+```
+
+This matches the convention used in the analysis notebook.
+
+### Date and Employment Standardization
+
+The pipeline also standardizes fields such as:
+
+* Application dates
+* Start dates
+* Employment type
+* Job grade
+* Remote status
+* Location
+
+---
+
+# 🔗 3. Skill Extraction
+
+The transformation pipeline also creates structured job-to-skill relationships.
+
+Skills are extracted from job-posting content and stored separately from the main job records.
+
+The database uses:
+
+```text
+job_skills
+```
+
+for job postings and:
+
+```text
+job_posting_skills
+```
+
+as the bridge table connecting postings to extracted skills.
+
+This creates a many-to-many relationship between jobs and skills.
+
+### Important Limitation
+
+Skill extraction was explored as part of the project, but the resulting skill data was not considered reliable enough to use for the primary dashboard analysis.
+
+The project therefore does **not** make claims about overall skill dominance such as "SQL appears in X% of postings."
+
+This was an intentional data-quality decision rather than presenting potentially noisy skill results as definitive market findings.
+
+---
+
+# 🗄️ 4. PostgreSQL Data Layer
+
+The current production pipeline uses **PostgreSQL** as its database.
+
+Database configuration and schema creation are handled by:
+
+```text
+engine.py
+```
+
+The loading process is implemented in:
+
+```text
+load.py
+```
+
+The primary tables are:
+
+### `job_skills`
+
+Contains the structured job-posting records, including fields such as:
+
+* Job ID
+* Role
+* Title
+* Organization
+* Department
+* City
+* State
+* Description
+* Posting dates
+* Salary
+* Employment type
+* Remote status
+
+### `job_posting_skills`
+
+A bridge table containing relationships between job postings and extracted skills.
+
+This structure allows one job posting to be associated with multiple skills.
+
+---
+
+# 🔄 5. Incremental & Transactional Loading
+
+The pipeline is designed to update the current dataset without simply replacing the entire database.
+
+The loader:
+
+* Refreshes postings returned by the latest API extraction
+* Preserves older postings that are not returned by the latest response
+* Uses database transactions during loading
+* Removes duplicate job-skill relationships
+* Protects posting IDs and job-skill pairs with unique indexes
+* Prevents a zero-result extraction from replacing existing data
+
+### Content-Based Deduplication
+
+The pipeline also checks for duplicate postings based on their posting content rather than relying only on the source ID.
+
+This helps identify cases where identical job postings appear under different source IDs.
+
+---
+
+# 📊 6. Exploratory Data Analysis
+
+The exploratory analysis is documented in:
+
+```text
+experimentation/Pipeline_for_Data_Job_Market_Analysis.ipynb
+```
+
+The notebook examines the transformed job dataset and supports the analysis presented in the dashboard.
+
+Areas explored include:
+
+* Job role distribution
+* Salary patterns
+* Geographic distribution
+* Employment type
+* Job grades
+* Data volume through the transformation pipeline
+
+The notebook also contains the project's earlier pipeline experimentation and transformation work.
+
+---
+
+# 📈 7. Power BI Dashboard
+
+The final analytical output is presented through Power BI.
+
+The dashboard is designed around several business questions.
+
+### Job Market Distribution
+
+Examines the distribution of federal data-related job postings across role categories.
+
+In the current dashboard analysis:
+
+* **Data Analyst:** 34.5%
+* **Data Engineer:** 32.1%
+
+Together, these two categories represent **66.6%** of the analyzed postings.
+
+### Geographic Analysis
+
+The dashboard examines:
+
+* Job postings by state
+* Average salary by state
+* Geographic concentration of opportunities
+
+### Compensation Analysis
+
+The dashboard compares compensation across:
+
+* Job roles
+* States
+* Employment types
+* Other available job attributes
+
+### Employment Analysis
+
+The dashboard provides an overview of job volume and compensation patterns across different employment types.
+
+---
+
+# 📌 Key Findings
+
+Based on the current dashboard and project analysis:
+
+### Data Analyst & Data Engineer Roles
+
+Data Analyst and Data Engineer positions make up the largest portions of the analyzed dataset, accounting for **34.5%** and **32.1%**, respectively.
+
+Together, they represent **66.6%** of the analyzed postings.
+
+### Geographic Variation
+
+Job opportunities and average compensation vary across U.S. states, providing a way to compare where federal data-related positions are concentrated and how compensation differs geographically.
+
+### Role-Level Compensation
+
+Salary distributions differ across job categories, allowing the dashboard to be used to compare compensation patterns between different data-related career paths.
+
+> These findings describe the dataset collected through the USAJOBS-based pipeline. They should not be interpreted as a complete representation of the entire U.S. or global data-job market.
+
+---
+
+# 🧪 8. Data Quality & Testing
+
+The project includes an offline test suite:
+
+```text
+tests/test_etl_job_market.py
+```
+
+The tests cover important transformation and loading behaviors, including:
+
+* Posting deduplication
+* Salary normalization
+* Job-grade processing
+* Employment-type processing
+* Date parsing
+* Location parsing
+* Skill extraction
+
+Run the test suite with:
+
+```bash
+python -m unittest discover -s tests
+```
+
+---
+
+# 📤 9. Data Outputs
+
+The ETL pipeline can generate database snapshots under:
+
+```text
+data/processed/
+```
+
+The generated outputs include:
+
+```text
+job_skills.csv
+job_posting_skills.csv
+```
+
+`job_skills.csv` contains the persisted job-posting records.
+
+`job_posting_skills.csv` contains the relationships between job postings and extracted skills.
+
+The generated CSV files are ignored by Git and are not part of the committed repository.
+
+---
+
+# 🏗️ 10. Pipeline Architecture
+
+The production pipeline is organized into modular Python components:
+
+```text
+extract.py
+    │
+    ├── USAJOBS API requests
+    ├── Pagination
+    ├── Retry / backoff
+    └── Raw posting extraction
+          │
+          ▼
+transform.py
+    │
+    ├── Data cleaning
+    ├── Role classification
+    ├── Location parsing
+    ├── Salary normalization
+    ├── Date normalization
+    └── Skill extraction
+          │
+          ▼
+load.py
+    │
+    ├── Transactional database updates
+    ├── Posting replacement
+    └── Skill relationship loading
+          │
+          ▼
+engine.py
+    │
+    ├── PostgreSQL connection
+    ├── Table definitions
+    └── Unique indexes
+          │
+          ▼
+PostgreSQL
+          │
+          ├──────────────► CSV snapshots
+          │
+          ▼
+      Power BI
+```
+
+The entire workflow is orchestrated through:
+
+```text
+etl_job_market.py
+```
+
+---
+
+# 📂 11. Repository Structure
+
+```text
+Job-Market-Analysis/
+│
+├── etl_job_market.py
+│   └── ETL pipeline orchestrator
+│
+├── extract.py
+│   └── USAJOBS API extraction
+│
+├── transform.py
+│   └── Data cleaning, classification,
+│       normalization, and skill extraction
+│
+├── load.py
+│   └── PostgreSQL loading logic
+│
+├── engine.py
+│   └── Database connection and schema definitions
+│
+├── tests/
+│   └── test_etl_job_market.py
+│       └── Offline ETL tests
+│
+├── experimentation/
 │   ├── Pipeline_for_Data_Job_Market_Analysis.ipynb
 │   └── airflow-jobs-pipeline/
+│
+├── Federal_Data_Job_Market_Analysis.pbix
+│   └── Power BI dashboard
+│
+├── Dashboard.png
+│   └── Dashboard preview
+│
+├── index.html
+│   └── Interactive project walkthrough
+│
+├── requirements.txt
+│   └── Python dependencies
+│
+├── .env.example
+│   └── Environment variable template
+│
+├── .gitignore
+│
 └── README.md
 ```
 
+---
 
-## Run the ETL
+# 🚀 12. Running the Pipeline
 
-The production-style command-line pipeline is split into four stages: `extract.py` fetches USAJOBS pages with connection reuse, bounded retry/backoff and explicit timeouts; `transform.py` cleans postings and derives skills; `load.py` transactionally replaces only the fetched posting IDs; and `engine.py` configures PostgreSQL and declares the target schema. `etl_job_market.py` orchestrates those stages and writes atomic CSV snapshots. Job-to-skill matches are stored in the `job_posting_skills` bridge table, while `job_skills` remains the postings table for compatibility with the existing Power BI model. A zero-result extract never replaces existing database data.
+## Step 1: Clone the Repository
 
-1. Create a virtual environment and install `requirements.txt`.
-2. Copy `.env.example` to `.env` and populate the USAJOBS and PostgreSQL credentials. `.env` is ignored by Git.
-3. Run `python etl_job_market.py` from this directory. The command extracts and transforms current USAJOBS listings, loads the new/updated postings and skill links into PostgreSQL, then exports the full database tables to `data/processed/` so CSV row counts match PostgreSQL.
-4. For an API-and-transform run that writes only the latest fetched/cleaned batch without connecting to PostgreSQL, run `python etl_job_market.py --skip-load`.
-5. Run the offline checks with `python -m unittest discover -s tests`.
+```bash
+git clone https://github.com/HaTranUSF/Job-Market-Analysis.git
+cd Job-Market-Analysis
+```
 
-The ETL refreshes fetched USAJOBS IDs while preserving older postings not returned by the latest API response. It also treats rows with identical posting content (all posting fields except `id`) as duplicates, keeping one record even when source IDs differ; database setup applies this cleanup and removes duplicate job-skill pairs. Unique indexes protect posting IDs and job-skill pairs, while content-based deduplication runs during each load. Salary values below $500 are treated as hourly and annualized at 2,080 hours, matching the analysis notebook's convention. In a normal run, `job_skills.csv` is a full database snapshot and `job_posting_skills.csv` contains all persisted skill links.
+## Step 2: Create the Environment
+
+Install the required Python packages:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Step 3: Configure Environment Variables
+
+Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+Configure the required USAJOBS and PostgreSQL credentials.
+
+Do not commit `.env` to Git.
+
+## Step 4: Run the Full ETL Pipeline
+
+```bash
+python etl_job_market.py
+```
+
+The pipeline will:
+
+1. Extract USAJOBS postings
+2. Transform and standardize the data
+3. Load the results into PostgreSQL
+4. Generate CSV snapshots from the persisted database data
+
+## Step 5: Run Without PostgreSQL
+
+To perform extraction and transformation without loading the database:
+
+```bash
+python etl_job_market.py --skip-load
+```
+
+## Step 6: Run Tests
+
+```bash
+python -m unittest discover -s tests
+```
+
+---
+
+# 💰 13. Architecture Evolution
+
+The project originally used **Snowflake** during development.
+
+After evaluating the scale and requirements of the project, the implementation was moved to **PostgreSQL**.
+
+This resulted in a simpler architecture for the current dataset while preserving the modular ETL design.
+
+```text
+Original Prototype
+Snowflake
+    ↓
+Evaluation of project scale/cost
+    ↓
+Current Implementation
+PostgreSQL
+```
+
+The current repository therefore uses PostgreSQL as the production data layer. Snowflake is part of the project's development history rather than the current implementation.
+
+---
+
+# 🔮 14. Future Improvements
+
+Potential next steps identified during the project include:
+
+* Automating scheduled pipeline execution
+* Expanding the number of data sources
+* Improving skill extraction and validation
+* Adding more robust historical job tracking
+* Expanding analytical coverage
+* Further improving the dashboard experience
+
+---
+
+# 🧠 15. Project Takeaway
+
+This project demonstrates how a messy, semi-structured job-posting source can be transformed into a repeatable analytical workflow.
+
+The core process is:
+
+```text
+USAJOBS API
+     ↓
+Extract
+     ↓
+Clean & Standardize
+     ↓
+Classify
+     ↓
+Normalize
+     ↓
+PostgreSQL
+     ↓
+Analyze
+     ↓
+Power BI
+```
+
+Rather than manually reviewing individual job postings, the pipeline creates a structured foundation for analyzing **which federal data roles are most common, where opportunities are concentrated, and how compensation varies across the market**.
+
+The project combines data engineering and analytics to turn raw job-posting data into a business-facing data product.
