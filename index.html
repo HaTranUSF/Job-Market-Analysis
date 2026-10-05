@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Federal Data Job Market & GenAI Risk Analysis</title>
+    <title>Federal Data Job Market & GenAI Audit Analysis</title>
     <style>
         :root {
             --primary: #0f172a;
@@ -170,7 +170,7 @@
 
     <div class="section">
         <h2>The Business Problem</h2>
-        <p>The federal data job market spans thousands of postings across dozens of government agencies, but unstructured text descriptions make standard query analysis difficult[cite: 4]. Job titles vary widely ("Data Analyst," "Program Analyst (Data)," "IT Specialist (Data Management)"), pay scales flip between annual ranges and hourly rates, and crucial compliance details—such as required security clearance levels, financial system access, and internal audit oversight—are buried inside free-text descriptions[cite: 4]. Standard SQL cannot query paragraph descriptions to evaluate an agency's risk profile or security exposure[cite: 4].</p>
+        <p>The federal data job market spans thousands of postings across dozens of government agencies, but unstructured text descriptions make standard query analysis difficult. Job titles vary widely ("Data Analyst," "Program Analyst (Data)," "IT Specialist (Data Management)"), pay scales flip between annual ranges and hourly rates, and crucial compliance details—such as required security clearance levels, financial system access, and internal audit oversight—are buried inside free-text descriptions. Standard SQL cannot query paragraph descriptions to evaluate an agency's risk profile or security exposure.</p>
         <div class="tag-row">
             <span class="tag tag-tech">Python</span>
             <span class="tag tag-tech">USAJOBS API</span>
@@ -182,7 +182,7 @@
 
     <div class="section">
         <h2>Dashboard Analysis & Visual Interpretations</h2>
-        <p>The project features a two-page Power BI dashboard designed as a macro-to-micro drilldown: Page 1 analyzes overall market distribution and compensation trends, while Page 2 analyzes internal governance and compliance risks[cite: 4].</p>
+        <p>The project features a two-page Power BI dashboard designed as a macro-to-micro drilldown: Page 1 analyzes overall market distribution and compensation trends, while Page 2 analyzes internal governance and compliance risks.</p>
 
         <div class="diagram-grid">
             <!-- Page 1 Visual -->
@@ -194,11 +194,11 @@
 
         <h3>Page 1 Analysis: Macro Market Overview</h3>
         <ul>
-            <li><strong>Role Volume Distribution:</strong> The donut chart shows that <strong>Data Specialists</strong> overwhelmingly dominate federal hiring, accounting for <strong>60.1% (1.69K)</strong> of open postings[cite: 4]. <strong>Data Analysts (16.89% / 0.48K)</strong> and <strong>Data Engineers (12.8% / 0.36K)</strong> comprise the second largest categories[cite: 4].</li>
-            <li><strong>Nationwide Active Positions:</strong> Filtering across current active hiring rolls yields <strong>440 active positions</strong> across nationwide agencies[cite: 4].</li>
-            <li><strong>Compensation by Employment Type:</strong> Full-Time positions carry an average annual salary of <strong>$116.16K (28.86%)</strong>, followed closely by Shift Work ($111.05K) and On-Call roles[cite: 4]. Part-Time roles trail at $59.28K[cite: 4].</li>
+            <li><strong>Role Volume Distribution:</strong> The donut chart shows that <strong>Data Specialists</strong> overwhelmingly dominate federal hiring, accounting for <strong>60.1% (1.69K)</strong> of open postings. <strong>Data Analysts (16.89% / 0.48K)</strong> and <strong>Data Engineers (12.8% / 0.36K)</strong> comprise the second largest categories.</li>
+            <li><strong>Nationwide Active Positions:</strong> Filtering across current active hiring rolls yields <strong>440 active positions</strong> across nationwide agencies.</li>
+            <li><strong>Compensation by Employment Type:</strong> Full-Time positions carry an average annual salary of <strong>$116.16K (28.86%)</strong>, followed closely by Shift Work ($111.05K) and On-Call roles. Part-Time roles trail at $59.28K.</li>
             <li><strong>Salary Compression Across Roles:</strong> Machine Learning Engineers and Research Analysts command the top mid-range salary tiers ($120K–$135K), but federal pay band structures compress compensation differences between Data Analysts and Machine Learning Engineers compared to private sector standards.</li>
-            <li><strong>Compensation Trends Over Time:</strong> Average salary metrics remained consistently above $110K through mid-2026, showing short-term fluctuations driven by monthly agency batch hiring cycles rather than structural market shifts[cite: 4].</li>
+            <li><strong>Compensation Trends Over Time:</strong> Average salary metrics remained consistently above $110K through mid-2026, showing short-term fluctuations driven by monthly agency batch hiring cycles rather than structural market shifts.</li>
         </ul>
 
         <div class="diagram-grid">
@@ -211,44 +211,44 @@
 
         <h3>Page 2 Analysis: GenAI Audit & Risk Extraction</h3>
         <ul>
-            <li><strong>Security Clearance & Financial System Signals:</strong> From the pilot batch, the GenAI worker detected <strong>3 explicit security clearance requirements</strong> and <strong>3 postings requiring financial system access</strong>[cite: 4].</li>
-            <li><strong>Agency Control Requirements:</strong> Defense-focused departments—including the <strong>Department of the Air Force</strong> and <strong>Department of the Navy</strong>—exhibit the highest volume of postings evaluated for internal governance and audit requirements[cite: 4].</li>
-            <li><strong>Compliance Concentration:</strong> Independent agencies and broader defense branches showed elevated internal control flags (<code>mentions_audit_or_controls = 1</code>), illustrating where technical roles interface with federal regulatory oversight[cite: 4].</li>
+            <li><strong>Security Clearance & Financial System Signals:</strong> From the pilot batch, the GenAI worker detected <strong>3 explicit security clearance requirements</strong> and <strong>3 postings requiring financial system access</strong>.</li>
+            <li><strong>Agency Control Requirements:</strong> Defense-focused departments—including the <strong>Department of the Air Force</strong> and <strong>Department of the Navy</strong>—exhibit the highest volume of postings evaluated for internal governance and audit requirements.</li>
+            <li><strong>Compliance Concentration:</strong> Independent agencies and broader defense branches showed elevated internal control flags (<code>mentions_audit_or_controls = 1</code>), illustrating where technical roles interface with federal regulatory oversight.</li>
         </ul>
     </div>
 
     <div class="section">
         <h2>What I Built</h2>
-        <p>A modular ETL pipeline paired with an experimental LLM enrichment worker[cite: 4]:</p>
+        <p>A modular ETL pipeline paired with an experimental LLM enrichment worker:</p>
         
         <h3>1. Extract & Transform</h3>
         <ul>
-            <li><strong>API Ingestion:</strong> Paginated through 12 data-related role searches on the USAJOBS API with exponential backoff handling, fetching <strong>5,588 raw postings</strong>[cite: 4].</li>
-            <li><strong>Data Cleaning:</strong> Normalized hourly pay rates to annual compensation, standardized state locations, and classified varied agency job titles into uniform career tracks[cite: 4].</li>
+            <li><strong>API Ingestion:</strong> Paginated through 12 data-related role searches on the USAJOBS API with exponential backoff handling, fetching <strong>5,588 raw postings</strong>.</li>
+            <li><strong>Data Cleaning:</strong> Normalized hourly pay rates to annual compensation, standardized state locations, and classified varied agency job titles into uniform career tracks.</li>
         </ul>
 
         <h3>2. Experimental GenAI Risk Extraction</h3>
         <div class="experimental-box">
             <div class="experimental-title">🧪 Experimental Feature Note: Gemini API Integration</div>
             <p style="margin-bottom: 0; color: #e2e8f0; font-size: 0.9rem;">
-                The GenAI enrichment step (<code>genai_enrichment.py</code>) is currently an <strong>experimental proof-of-concept</strong>[cite: 4]. To manage development costs and respect free-tier API rate limits (15 RPM), the pipeline was tested on a <strong>pilot batch of 26 postings</strong>[cite: 4]. The worker is designed for idempotent batch processing to scale across the full PostgreSQL database[cite: 4].
+                The GenAI enrichment step (<code>genai_enrichment.py</code>) is currently an <strong>experimental proof-of-concept</strong>. To manage development costs and respect free-tier API rate limits (15 RPM), the pipeline was tested on a <strong>pilot batch of 26 postings</strong>. The worker is designed for idempotent batch processing to scale across the full PostgreSQL database.
             </p>
         </div>
         <ul>
-            <li><strong>Structured LLM Parsing:</strong> Utilized the <code>google-genai</code> SDK and Pydantic schema validation to extract structured security clearance, financial access, and audit control flags from unstructured descriptions[cite: 4].</li>
-            <li><strong>Zero-Hallucination Grounding:</strong> Implemented a string verification check (<code>validate_response</code>) that matches every extracted LLM quote against raw job text, setting flags to <code>False</code> if a quote fails exact verification[cite: 4].</li>
+            <li><strong>Structured LLM Parsing:</strong> Utilized the <code>google-genai</code> SDK and Pydantic schema validation to extract structured security clearance, financial access, and audit control flags from unstructured descriptions.</li>
+            <li><strong>Zero-Hallucination Grounding:</strong> Implemented a string verification check (<code>validate_response</code>) that matches every extracted LLM quote against raw job text, setting flags to <code>False</code> if a quote fails exact verification.</li>
         </ul>
 
         <h3>3. Database & Load Layer</h3>
         <ul>
-            <li><strong>PostgreSQL Pipeline:</strong> Loaded clean records and LLM risk flags into PostgreSQL using transactional upserts and content-hashing (MD5) to prevent duplicate rows during updates[cite: 4].</li>
+            <li><strong>PostgreSQL Pipeline:</strong> Loaded clean records and LLM risk flags into PostgreSQL using transactional upserts and content-hashing (MD5) to prevent duplicate rows during updates.</li>
         </ul>
     </div>
 
     <div class="section">
         <h2>Key Architectural Decisions</h2>
-        <p><strong>Database Migration (Snowflake → PostgreSQL):</strong> Snowflake was used during initial warehousing experimentation[cite: 4]. To eliminate compute costs while preserving enterprise relational modeling, transactional upserts, and schema indexing, the pipeline was migrated to PostgreSQL[cite: 4].</p>
-        <p><strong>Grounding AI Outputs:</strong> Standard regex keyword searches proved too noisy for unstructured job descriptions[cite: 4]. Combining Gemini LLM parsing with programmatic exact-quote verification ensured all AI-extracted audit flags were 100% grounded in source job text before database loading[cite: 4].</p>
+        <p><strong>Database Migration (Snowflake → PostgreSQL):</strong> Snowflake was used during initial warehousing experimentation. To eliminate compute costs while preserving enterprise relational modeling, transactional upserts, and schema indexing, the pipeline was migrated to PostgreSQL.</p>
+        <p><strong>Grounding AI Outputs:</strong> Standard regex keyword searches proved too noisy for unstructured job descriptions. Combining Gemini LLM parsing with programmatic exact-quote verification ensured all AI-extracted audit flags were 100% grounded in source job text before database loading.</p>
     </div>
 
     <div class="section">
@@ -296,19 +296,24 @@ Job-Market-Analysis/
 ├── load.py                # Database upsert logic
 ├── genai_enrichment.py    # Gemini risk extraction worker (Experimental)
 ├── engine.py              # PostgreSQL engine & schemas
+├── tests/                 # Unit test suite
+│   ├── test_etl_job_market.py
+│   └── test_genai_enrichment.py
+├── experimentation/       # Analysis notebooks
+│   └── Pipeline_for_Data_Job_Market_Analysis.ipynb
 ├── Federal_Data_Job_Market_Analysis.pbix  # Power BI report
 ├── Dashboard.png          # Page 1 preview
 ├── GenAI_dashboard.png    # Page 2 preview
-└── README.md              # Project documentation
+└── README.md              # Detailed repository documentation
         </div>
     </div>
 
     <div class="section">
         <h2>What's Next</h2>
         <ul>
-            <li>Scale experimental Gemini API risk extraction beyond the 26-posting pilot batch to cover the entire historical dataset[cite: 4].</li>
-            <li>Implement automated pipeline scheduling using GitHub Actions or Apache Airflow[cite: 4].</li>
-            <li>Expand LLM extraction prompts to categorize required technical tools (Python, SQL, AWS) from job text[cite: 4].</li>
+            <li>Scale experimental Gemini API risk extraction beyond the 26-posting pilot batch to cover the entire historical dataset.</li>
+            <li>Implement automated pipeline scheduling using GitHub Actions or Apache Airflow.</li>
+            <li>Expand LLM extraction prompts to categorize required technical tools (Python, SQL, AWS) from job text.</li>
         </ul>
     </div>
 </div>
