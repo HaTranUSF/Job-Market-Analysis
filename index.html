@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Job Market Analysis</title>
+    <title>Federal Data Job Market Analysis</title>
     <style>
         :root {
             --primary: #0f172a;
@@ -136,6 +136,18 @@
             font-weight: bold;
         }
         .flow-arrow { color: var(--accent); font-size: 1.2rem; }
+
+        .tree-block {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.9rem;
+            color: #e2e8f0;
+            line-height: 1.8;
+            overflow-x: auto;
+        }
     </style>
 </head>
 <body>
@@ -150,7 +162,7 @@
             <div>📊 <strong>Scale:</strong> 2000+ Active Postings</div>
         </div>
         <div class="nav-links">
-            <a href="https://github.com/HaTranUSF/Data-Job-Market-Analysis" class="btn" target="_blank">📁 View GitHub Repository</a>
+            <a href="https://github.com/HaTranUSF/Job-Market-Analysis" class="btn" target="_blank" rel="noopener noreferrer">📁 View GitHub Repository</a>
         </div>
     </header>
 
@@ -164,8 +176,8 @@
             <span class="tag tag-tech">Power BI</span>
         </div>
         <div class="diagram-box">
-            <img src="dashboard.png" alt="Power BI Dashboard View" class="diagram-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-            <div style="display:none;" class="fallback-pipeline">
+            <img src="dashboard.png" alt="Power BI Dashboard View" class="diagram-img" onerror="this.style.display='none'; document.getElementById('fallback-pipeline').style.display='block';">
+            <div id="fallback-pipeline" style="display:none;">
                 <div class="pipeline-flow">
                     <div class="flow-step" style="border-color: #cbd5e1;">USAJobs API (12 role searches)</div>
                     <div class="flow-arrow">⬇️ [Extract]</div>
@@ -248,11 +260,11 @@
 
     <div class="section">
         <h2>Repository Structure</h2>
-        <ul style="font-family: monospace; list-style: none; padding-left: 0;">
-            <li>├── Pipeline_for_Data_Job_Market_Analysis.ipynb &nbsp; # Extract, transform, and load into Postgres</li>
-            <li>├── Federal_Data_Job_Market_Analysis.pbix &nbsp; # Power BI dashboard</li>
-            <li>└── README.md</li>
-        </ul>
+        <div class="tree-block">
+├── Pipeline_for_Data_Job_Market_Analysis.ipynb  # Extract, transform, and load into Postgres<br>
+├── Federal_Data_Job_Market_Analysis.pbix        # Power BI dashboard<br>
+└── README.md
+        </div>
     </div>
 
     <div class="section">
