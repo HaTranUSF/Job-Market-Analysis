@@ -3,319 +3,1733 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Federal Data Job Market & GenAI Audit Analysis</title>
+
+    <meta name="description"
+          content="Federal Data Job Market Analysis - Python ETL, PostgreSQL, Power BI, and experimental Gemini risk extraction.">
+
+    <title>Federal Data Job Market Analysis | Ha Tran</title>
+
     <style>
         :root {
-            --primary: #0f172a;
-            --secondary: #1e293b;
-            --accent: #38bdf8;
-            --accent-hover: #0284c7;
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
-            --purple-accent: #a855f7;
-            --warning-bg: rgba(168, 85, 247, 0.1);
+            --bg: #0b1120;
+            --surface: #111827;
+            --surface-2: #172033;
+            --surface-3: #0f172a;
+
+            --text: #f8fafc;
+            --muted: #94a3b8;
+
+            --border: #263449;
+
+            --blue: #38bdf8;
+            --blue-dark: #0284c7;
+
+            --purple: #c084fc;
+            --purple-bg: rgba(168, 85, 247, 0.10);
+
+            --green: #4ade80;
+            --green-bg: rgba(74, 222, 128, 0.10);
+
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.20);
         }
-        
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            line-height: 1.6;
-            background-color: var(--bg);
-            color: var(--text-main);
-            padding: 40px 20px;
+            font-family:
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
+
+            background:
+                radial-gradient(
+                    circle at top right,
+                    rgba(56, 189, 248, 0.08),
+                    transparent 30%
+                ),
+                var(--bg);
+
+            color: var(--text);
+            line-height: 1.65;
+            padding: 32px 20px 60px;
         }
+
+        a {
+            color: inherit;
+        }
+
         .container {
-            max-width: 1100px;
+            width: min(1120px, 100%);
             margin: 0 auto;
         }
-        header {
-            background: linear-gradient(135deg, #1e293b, #0f172a);
-            border: 1px solid var(--border);
-            padding: 40px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        header h1 { font-size: 2.4rem; margin-bottom: 10px; font-weight: 800; color: #fff; }
-        header p { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 20px; }
-        .meta { font-size: 0.95rem; color: var(--text-muted); display: flex; gap: 20px; flex-wrap: wrap; }
-        .meta strong { color: var(--accent); }
 
-        .nav-links {
-            margin-top: 25px;
-            display: flex;
-            gap: 15px;
+        /* =========================
+           HERO
+        ========================= */
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+
+            padding: 48px;
+            margin-bottom: 24px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(30, 41, 59, 0.96),
+                    rgba(15, 23, 42, 0.98)
+                );
+
+            border: 1px solid var(--border);
+            border-radius: 18px;
+
+            box-shadow: var(--shadow);
         }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            right: -90px;
+            top: -110px;
+
+            background: rgba(56, 189, 248, 0.10);
+            border-radius: 50%;
+            filter: blur(20px);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+
+            padding: 6px 12px;
+            margin-bottom: 18px;
+
+            color: var(--blue);
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.18);
+
+            border-radius: 999px;
+
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            position: relative;
+            z-index: 1;
+
+            max-width: 850px;
+
+            font-size: clamp(2rem, 5vw, 3.3rem);
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+
+            margin-bottom: 18px;
+        }
+
+        .hero-description {
+            position: relative;
+            z-index: 1;
+
+            max-width: 850px;
+
+            color: var(--muted);
+            font-size: 1.12rem;
+        }
+
+        .hero-meta {
+            position: relative;
+            z-index: 1;
+
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+
+            margin-top: 26px;
+        }
+
+        .meta-item {
+            padding: 8px 13px;
+
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+
+        .meta-item strong {
+            color: var(--text);
+        }
+
+        .hero-actions {
+            position: relative;
+            z-index: 1;
+
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+
+            margin-top: 28px;
+        }
+
         .btn {
             display: inline-flex;
             align-items: center;
-            background: var(--accent);
-            color: var(--primary);
-            padding: 12px 24px;
-            border-radius: 8px;
+            justify-content: center;
+
+            padding: 11px 18px;
+
+            border-radius: 9px;
+
             text-decoration: none;
+            font-size: 0.9rem;
             font-weight: 700;
-            font-size: 0.95rem;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 6px rgba(56, 189, 248, 0.2);
+
+            transition:
+                transform 0.2s ease,
+                background 0.2s ease;
         }
-        .btn:hover { background: #7dd3fc; transform: translateY(-1px); }
+
+        .btn-primary {
+            background: var(--blue);
+            color: #082f49;
+        }
+
+        .btn-primary:hover {
+            background: #7dd3fc;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface-2);
+            transform: translateY(-2px);
+        }
+
+        /* =========================
+           SECTIONS
+        ========================= */
 
         .section {
-            background: var(--card-bg);
-            padding: 35px;
-            border-radius: 12px;
-            margin-bottom: 25px;
+            background: rgba(17, 24, 39, 0.94);
+
             border: 1px solid var(--border);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 16px;
+
+            padding: 34px;
+            margin-bottom: 22px;
+
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.12);
         }
-        h2 { color: #fff; margin-bottom: 20px; font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
-        h2::before { content: ''; display: inline-block; width: 4px; height: 20px; background: var(--accent); border-radius: 2px; }
-        h3 { color: #fff; margin-bottom: 10px; margin-top: 20px; font-size: 1.1rem; }
-        p { margin-bottom: 15px; color: var(--text-muted); }
-        ul { margin-bottom: 15px; padding-left: 20px; color: var(--text-muted); }
-        li { margin-bottom: 8px; }
 
-        .tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
-        .tag { background: #334155; color: #f1f5f9; padding: 4px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; }
-        .tag-tech { background: rgba(56, 189, 248, 0.1); color: var(--accent); border: 1px solid rgba(56, 189, 248, 0.2); }
-        .tag-exp { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+        .section-header {
+            margin-bottom: 24px;
+        }
 
-        .metric-cards {
+        .section-header h2 {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+
+            color: var(--text);
+            font-size: 1.45rem;
+            margin-bottom: 7px;
+        }
+
+        .section-header h2::before {
+            content: "";
+
+            width: 4px;
+            height: 22px;
+
+            background: var(--blue);
+            border-radius: 3px;
+        }
+
+        .section-header p {
+            color: var(--muted);
+            font-size: 0.96rem;
+        }
+
+        p {
+            color: var(--muted);
+            margin-bottom: 15px;
+        }
+
+        ul {
+            color: var(--muted);
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 9px;
+        }
+
+        strong {
+            color: var(--text);
+        }
+
+        code {
+            padding: 2px 6px;
+
+            background: #0b1120;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+
+            color: #bae6fd;
+
+            font-family:
+                ui-monospace,
+                SFMono-Regular,
+                Menlo,
+                Monaco,
+                Consolas,
+                monospace;
+
+            font-size: 0.86em;
+        }
+
+        /* =========================
+           TAGS
+        ========================= */
+
+        .tag-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+
+            margin-top: 20px;
+        }
+
+        .tag {
+            padding: 6px 11px;
+
+            background: #1e293b;
+            border: 1px solid var(--border);
+
+            border-radius: 7px;
+
+            color: #dbeafe;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        .tag-tech {
+            color: var(--blue);
+            background: rgba(56, 189, 248, 0.07);
+            border-color: rgba(56, 189, 248, 0.18);
+        }
+
+        .tag-ai {
+            color: var(--purple);
+            background: var(--purple-bg);
+            border-color: rgba(168, 85, 247, 0.25);
+        }
+
+        /* =========================
+           BUSINESS PROBLEM
+        ========================= */
+
+        .problem-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin: 25px 0;
+            grid-template-columns: 1.4fr 0.9fr;
+            gap: 24px;
+            align-items: stretch;
         }
-        .metric-card {
-            background: rgba(15, 23, 42, 0.5);
+
+        .problem-card {
+            padding: 22px;
+
+            background: var(--surface-3);
             border: 1px solid var(--border);
-            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .problem-card h3 {
+            color: var(--text);
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        /* =========================
+           PIPELINE
+        ========================= */
+
+        .pipeline {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+
+            margin-top: 25px;
+        }
+
+        .pipeline-step {
+            position: relative;
+
+            padding: 18px 12px;
+
+            background: var(--surface-3);
+            border: 1px solid var(--border);
             border-radius: 10px;
+
             text-align: center;
         }
-        .metric-val { font-size: 2rem; font-weight: 800; color: var(--accent); margin-bottom: 5px; }
-        .metric-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
 
-        .experimental-box {
-            background: var(--warning-bg);
-            border: 1px solid rgba(168, 85, 247, 0.4);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 25px;
+        .pipeline-step:not(:last-child)::after {
+            content: "→";
+
+            position: absolute;
+            right: -16px;
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            color: var(--blue);
+            font-size: 1.2rem;
+            z-index: 2;
         }
+
+        .pipeline-number {
+            display: block;
+
+            margin-bottom: 5px;
+
+            color: var(--blue);
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .pipeline-step strong {
+            display: block;
+            font-size: 0.9rem;
+        }
+
+        .pipeline-step span {
+            display: block;
+
+            margin-top: 4px;
+
+            color: var(--muted);
+            font-size: 0.76rem;
+        }
+
+        /* =========================
+           DASHBOARDS
+        ========================= */
+
+        .dashboard {
+            margin-top: 28px;
+
+            background: var(--surface-3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+
+            overflow: hidden;
+        }
+
+        .dashboard-image {
+            display: block;
+
+            width: 100%;
+            height: auto;
+
+            background: #020617;
+        }
+
+        .dashboard-caption {
+            padding: 13px 16px;
+
+            color: var(--muted);
+            font-size: 0.82rem;
+
+            border-top: 1px solid var(--border);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* =========================
+           FINDINGS
+        ========================= */
+
+        .findings-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+
+            margin-top: 24px;
+        }
+
+        .finding {
+            padding: 20px;
+
+            background: var(--surface-3);
+            border: 1px solid var(--border);
+
+            border-radius: 11px;
+        }
+
+        .finding-value {
+            margin-bottom: 6px;
+
+            color: var(--blue);
+            font-size: 1.8rem;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .finding-title {
+            margin-bottom: 7px;
+
+            color: var(--text);
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+
+        .finding p {
+            margin: 0;
+            font-size: 0.82rem;
+        }
+
+        /* =========================
+           GENAI
+        ========================= */
+
+        .experimental {
+            margin-top: 22px;
+            padding: 20px;
+
+            background: var(--purple-bg);
+            border: 1px solid rgba(168, 85, 247, 0.28);
+
+            border-radius: 11px;
+        }
+
         .experimental-title {
-            color: #c084fc;
-            font-weight: bold;
-            font-size: 1rem;
-            margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 8px;
+
+            margin-bottom: 7px;
+
+            color: var(--purple);
+            font-weight: 800;
         }
 
-        .diagram-grid {
+        .experimental p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .genai-grid {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 30px;
-            margin: 25px 0;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+
+            margin-top: 22px;
         }
 
-        .diagram-box {
-            background: #0f172a;
+        .genai-card {
+            padding: 21px;
+
+            background: var(--surface-3);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
+
+            border-radius: 11px;
+        }
+
+        .genai-card h3 {
+            margin-bottom: 9px;
+
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        /* =========================
+           RESULTS
+        ========================= */
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .result-card {
+            padding: 25px 20px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(56, 189, 248, 0.07),
+                    rgba(15, 23, 42, 0.6)
+                );
+
+            border: 1px solid var(--border);
+            border-radius: 12px;
+
             text-align: center;
         }
-        .diagram-img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-        }
-        .diagram-caption { color: var(--text-muted); font-size: 0.85rem; margin-top: 10px; font-style: italic; }
 
-        .tree-block {
-            background: #0f172a;
+        .result-value {
+            color: var(--blue);
+
+            font-size: 2.2rem;
+            font-weight: 850;
+            line-height: 1;
+
+            margin-bottom: 9px;
+        }
+
+        .result-label {
+            color: var(--muted);
+
+            font-size: 0.78rem;
+            font-weight: 700;
+
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* =========================
+           ARCHITECTURE
+        ========================= */
+
+        .architecture {
+            padding: 22px;
+
+            background: #020617;
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 15px;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-            font-size: 0.9rem;
-            color: #e2e8f0;
-            line-height: 1.8;
+            border-radius: 11px;
+
             overflow-x: auto;
+        }
+
+        .architecture pre {
+            color: #cbd5e1;
+
+            font-family:
+                ui-monospace,
+                SFMono-Regular,
+                Menlo,
+                Monaco,
+                Consolas,
+                monospace;
+
+            font-size: 0.83rem;
+            line-height: 1.7;
+        }
+
+        /* =========================
+           REPOSITORY
+        ========================= */
+
+        .tree {
+            padding: 20px;
+
+            background: #020617;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+
+            overflow-x: auto;
+        }
+
+        .tree pre {
+            color: #cbd5e1;
+
+            font-family:
+                ui-monospace,
+                SFMono-Regular,
+                Menlo,
+                Monaco,
+                Consolas,
+                monospace;
+
+            font-size: 0.82rem;
+            line-height: 1.75;
+        }
+
+        /* =========================
+           FOOTER
+        ========================= */
+
+        footer {
+            padding: 20px 0;
+
+            color: #64748b;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+
+        @media (max-width: 900px) {
+            .problem-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pipeline {
+                grid-template-columns: 1fr;
+            }
+
+            .pipeline-step:not(:last-child)::after {
+                content: "↓";
+
+                right: 50%;
+                top: auto;
+                bottom: -17px;
+
+                transform: translateX(50%);
+            }
+
+            .dashboard-grid,
+            .genai-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .findings-grid,
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 16px 12px 40px;
+            }
+
+            .hero,
+            .section {
+                padding: 24px;
+                border-radius: 13px;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero-description {
+                font-size: 1rem;
+            }
+
+            .section-header h2 {
+                font-size: 1.25rem;
+            }
         }
     </style>
 </head>
+
 <body>
 
 <div class="container">
-    <header>
-        <h1>Federal Data Job Market & GenAI Audit Analysis</h1>
-        <p>An automated ETL & GenAI pipeline that standardizes USAJOBS postings, cleanses salary and location fields, loads records into PostgreSQL, and tests experimental LLM risk extraction using the Gemini API.</p>
-        <div class="meta">
-            <div>👤 <strong>Author:</strong> Ha Tran</div>
-            <div>🛠️ <strong>Core Stack:</strong> Python, Gemini API, PostgreSQL (ex-Snowflake), Power BI</div>
-            <div>📊 <strong>Dataset Scale:</strong> 5,588 Raw API Postings</div>
+
+    <!-- =========================
+         HERO
+    ========================== -->
+
+    <header class="hero">
+
+        <div class="eyebrow">
+            Data Engineering • Analytics • GenAI
         </div>
-        <div class="nav-links">
-            <a href="https://github.com/HaTranUSF/Job-Market-Analysis" class="btn" target="_blank" rel="noopener noreferrer">📁 View GitHub Repository</a>
+
+        <h1>
+            Federal Data Job Market Analysis
+        </h1>
+
+        <p class="hero-description">
+            An end-to-end data pipeline that collects federal data-role
+            postings from USAJOBS, standardizes messy job-market data,
+            loads it into PostgreSQL, and analyzes market trends through
+            Power BI. An experimental Gemini enrichment layer extracts
+            compliance and risk evidence from unstructured job descriptions.
+        </p>
+
+        <div class="hero-meta">
+
+            <div class="meta-item">
+                <strong>Author:</strong> Ha Tran
+            </div>
+
+            <div class="meta-item">
+                <strong>5,588</strong> raw API postings
+            </div>
+
+            <div class="meta-item">
+                <strong>PostgreSQL</strong> data layer
+            </div>
+
+            <div class="meta-item">
+                <strong>Power BI</strong> reporting
+            </div>
+
+            <div class="meta-item">
+                <strong>Gemini</strong> experimental enrichment
+            </div>
+
         </div>
+
+        <div class="hero-actions">
+
+            <a
+                href="https://github.com/HaTranUSF/Job-Market-Analysis"
+                class="btn btn-primary"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                View GitHub Repository
+            </a>
+
+            <a
+                href="#dashboard"
+                class="btn btn-secondary"
+            >
+                View Dashboard
+            </a>
+
+        </div>
+
     </header>
 
-    <div class="section">
-        <h2>The Business Problem</h2>
-        <p>The federal data job market spans thousands of postings across dozens of government agencies, but unstructured text descriptions make standard query analysis difficult. Job titles vary widely ("Data Analyst," "Program Analyst (Data)," "IT Specialist (Data Management)"), pay scales flip between annual ranges and hourly rates, and crucial compliance details—such as required security clearance levels, financial system access, and internal audit oversight—are buried inside free-text descriptions. Standard SQL cannot query paragraph descriptions to evaluate an agency's risk profile or security exposure.</p>
-        <div class="tag-row">
-            <span class="tag tag-tech">Python</span>
-            <span class="tag tag-tech">USAJOBS API</span>
-            <span class="tag tag-exp">Experimental Gemini API</span>
-            <span class="tag tag-tech">PostgreSQL</span>
-            <span class="tag tag-tech">Power BI</span>
-        </div>
-    </div>
 
-    <div class="section">
-        <h2>Dashboard Analysis & Visual Interpretations</h2>
-        <p>The project features a two-page Power BI dashboard designed as a macro-to-micro drilldown: Page 1 analyzes overall market distribution and compensation trends, while Page 2 analyzes internal governance and compliance risks.</p>
+    <!-- =========================
+         BUSINESS PROBLEM
+    ========================== -->
 
-        <div class="diagram-grid">
-            <!-- Page 1 Visual -->
-            <div class="diagram-box">
-                <img src="Dashboard.png" alt="Federal Data Job Market Analysis Dashboard" class="diagram-img">
-                <div class="diagram-caption">Figure 1: Page 1 — Macro Market Demand & Compensation Visuals</div>
-            </div>
-        </div>
+    <section class="section">
 
-        <h3>Page 1 Analysis: Macro Market Overview</h3>
-        <ul>
-            <li><strong>Role Volume Distribution:</strong> The donut chart shows that <strong>Data Specialists</strong> overwhelmingly dominate federal hiring, accounting for <strong>60.1% (1.69K)</strong> of open postings. <strong>Data Analysts (16.89% / 0.48K)</strong> and <strong>Data Engineers (12.8% / 0.36K)</strong> comprise the second largest categories.</li>
-            <li><strong>Nationwide Active Positions:</strong> Filtering across current active hiring rolls yields <strong>440 active positions</strong> across nationwide agencies.</li>
-            <li><strong>Compensation by Employment Type:</strong> Full-Time positions carry an average annual salary of <strong>$116.16K (28.86%)</strong>, followed closely by Shift Work ($111.05K) and On-Call roles. Part-Time roles trail at $59.28K.</li>
-            <li><strong>Salary Compression Across Roles:</strong> Machine Learning Engineers and Research Analysts command the top mid-range salary tiers ($120K–$135K), but federal pay band structures compress compensation differences between Data Analysts and Machine Learning Engineers compared to private sector standards.</li>
-            <li><strong>Compensation Trends Over Time:</strong> Average salary metrics remained consistently above $110K through mid-2026, showing short-term fluctuations driven by monthly agency batch hiring cycles rather than structural market shifts.</li>
-        </ul>
+        <div class="section-header">
+            <h2>The Business Problem</h2>
 
-        <div class="diagram-grid">
-            <!-- Page 2 Visual -->
-            <div class="diagram-box">
-                <img src="GenAI_dashboard.png" alt="GenAI Risk & Audit Extraction Dashboard" class="diagram-img">
-                <div class="diagram-caption">Figure 2: Page 2 — GenAI Risk & Audit Extraction Visuals (Pilot Batch)</div>
-            </div>
-        </div>
-
-        <h3>Page 2 Analysis: GenAI Audit & Risk Extraction</h3>
-        <ul>
-            <li><strong>Security Clearance & Financial System Signals:</strong> From the pilot batch, the GenAI worker detected <strong>3 explicit security clearance requirements</strong> and <strong>3 postings requiring financial system access</strong>.</li>
-            <li><strong>Agency Control Requirements:</strong> Defense-focused departments—including the <strong>Department of the Air Force</strong> and <strong>Department of the Navy</strong>—exhibit the highest volume of postings evaluated for internal governance and audit requirements.</li>
-            <li><strong>Compliance Concentration:</strong> Independent agencies and broader defense branches showed elevated internal control flags (<code>mentions_audit_or_controls = 1</code>), illustrating where technical roles interface with federal regulatory oversight.</li>
-        </ul>
-    </div>
-
-    <div class="section">
-        <h2>What I Built</h2>
-        <p>A modular ETL pipeline paired with an experimental LLM enrichment worker:</p>
-        
-        <h3>1. Extract & Transform</h3>
-        <ul>
-            <li><strong>API Ingestion:</strong> Paginated through 12 data-related role searches on the USAJOBS API with exponential backoff handling, fetching <strong>5,588 raw postings</strong>.</li>
-            <li><strong>Data Cleaning:</strong> Normalized hourly pay rates to annual compensation, standardized state locations, and classified varied agency job titles into uniform career tracks.</li>
-        </ul>
-
-        <h3>2. Experimental GenAI Risk Extraction</h3>
-        <div class="experimental-box">
-            <div class="experimental-title">🧪 Experimental Feature Note: Gemini API Integration</div>
-            <p style="margin-bottom: 0; color: #e2e8f0; font-size: 0.9rem;">
-                The GenAI enrichment step (<code>genai_enrichment.py</code>) is currently an <strong>experimental proof-of-concept</strong>. To manage development costs and respect free-tier API rate limits (15 RPM), the pipeline was tested on a <strong>pilot batch of 26 postings</strong>. The worker is designed for idempotent batch processing to scale across the full PostgreSQL database.
+            <p>
+                Turning thousands of inconsistent federal job postings
+                into a dataset that can actually be analyzed.
             </p>
         </div>
-        <ul>
-            <li><strong>Structured LLM Parsing:</strong> Utilized the <code>google-genai</code> SDK and Pydantic schema validation to extract structured security clearance, financial access, and audit control flags from unstructured descriptions.</li>
-            <li><strong>Zero-Hallucination Grounding:</strong> Implemented a string verification check (<code>validate_response</code>) that matches every extracted LLM quote against raw job text, setting flags to <code>False</code> if a quote fails exact verification.</li>
-        </ul>
 
-        <h3>3. Database & Load Layer</h3>
-        <ul>
-            <li><strong>PostgreSQL Pipeline:</strong> Loaded clean records and LLM risk flags into PostgreSQL using transactional upserts and content-hashing (MD5) to prevent duplicate rows during updates.</li>
-        </ul>
-    </div>
+        <div class="problem-grid">
 
-    <div class="section">
-        <h2>Key Architectural Decisions</h2>
-        <p><strong>Database Migration (Snowflake → PostgreSQL):</strong> Snowflake was used during initial warehousing experimentation. To eliminate compute costs while preserving enterprise relational modeling, transactional upserts, and schema indexing, the pipeline was migrated to PostgreSQL.</p>
-        <p><strong>Grounding AI Outputs:</strong> Standard regex keyword searches proved too noisy for unstructured job descriptions. Combining Gemini LLM parsing with programmatic exact-quote verification ensured all AI-extracted audit flags were 100% grounded in source job text before database loading.</p>
-    </div>
+            <div class="problem-card">
 
-    <div class="section">
-        <h2>Results</h2>
-        <div class="metric-cards">
-            <div class="metric-card">
-                <div class="metric-val">5,588</div>
-                <div class="metric-label">Raw API Postings Processed</div>
+                <h3>Why the raw data is difficult to analyze</h3>
+
+                <p>
+                    Federal data-related postings use inconsistent job
+                    titles, salary formats, employment types, and
+                    location fields. Important operational information
+                    is also buried inside long job descriptions.
+                </p>
+
+                <p>
+                    For example, security clearance requirements,
+                    financial-system access, and audit responsibilities
+                    cannot reliably be identified from the job title alone.
+                </p>
+
             </div>
-            <div class="metric-card">
-                <div class="metric-val">60.1%</div>
-                <div class="metric-label">Data Specialist Market Share</div>
+
+            <div class="problem-card">
+
+                <h3>Core questions</h3>
+
+                <ul>
+                    <li>Which data roles are agencies hiring?</li>
+                    <li>How is demand distributed geographically?</li>
+                    <li>How does compensation vary by role?</li>
+                    <li>Which postings contain compliance or risk signals?</li>
+                </ul>
+
             </div>
-            <div class="metric-card">
-                <div class="metric-val">100%</div>
-                <div class="metric-label">GenAI Source Grounding Rate</div>
-            </div>
+
         </div>
-    </div>
 
-    <div class="section">
-        <h2>Tech Stack</h2>
         <div class="tag-row">
-            <span class="tag">Python</span>
-            <span class="tag">Gemini API (Experimental)</span>
-            <span class="tag">USAJOBS API</span>
-            <span class="tag">PostgreSQL</span>
-            <span class="tag">Snowflake (Prototype)</span>
-            <span class="tag">Power BI</span>
-            <span class="tag">pandas</span>
-            <span class="tag">NumPy</span>
-            <span class="tag">SQLAlchemy</span>
-            <span class="tag">psycopg2</span>
-            <span class="tag">python-dotenv</span>
-        </div>
-    </div>
 
-    <div class="section">
-        <h2>Repository Structure</h2>
-        <div class="tree-block">
+            <span class="tag tag-tech">Python</span>
+            <span class="tag tag-tech">USAJOBS API</span>
+            <span class="tag tag-tech">PostgreSQL</span>
+            <span class="tag tag-tech">Power BI</span>
+            <span class="tag tag-ai">Gemini API</span>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         PIPELINE
+    ========================== -->
+
+    <section class="section">
+
+        <div class="section-header">
+
+            <h2>End-to-End Pipeline</h2>
+
+            <p>
+                A modular workflow from raw federal postings to
+                business intelligence and experimental AI enrichment.
+            </p>
+
+        </div>
+
+        <div class="pipeline">
+
+            <div class="pipeline-step">
+                <span class="pipeline-number">01</span>
+                <strong>USAJOBS API</strong>
+                <span>Raw postings</span>
+            </div>
+
+            <div class="pipeline-step">
+                <span class="pipeline-number">02</span>
+                <strong>Python ETL</strong>
+                <span>Clean & classify</span>
+            </div>
+
+            <div class="pipeline-step">
+                <span class="pipeline-number">03</span>
+                <strong>PostgreSQL</strong>
+                <span>Structured data</span>
+            </div>
+
+            <div class="pipeline-step">
+                <span class="pipeline-number">04</span>
+                <strong>Gemini</strong>
+                <span>Risk evidence</span>
+            </div>
+
+            <div class="pipeline-step">
+                <span class="pipeline-number">05</span>
+                <strong>Power BI</strong>
+                <span>Market analysis</span>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         DASHBOARD
+    ========================== -->
+
+    <section class="section" id="dashboard">
+
+        <div class="section-header">
+
+            <h2>Dashboard Analysis</h2>
+
+            <p>
+                The Power BI report uses a macro-to-micro structure:
+                market demand and compensation first, followed by
+                experimental compliance and governance analysis.
+            </p>
+
+        </div>
+
+
+        <div class="dashboard-grid">
+
+            <div class="dashboard">
+
+                <img
+                    src="Dashboard.png"
+                    alt="Federal Data Job Market Power BI dashboard"
+                    class="dashboard-image"
+                >
+
+                <div class="dashboard-caption">
+                    Page 1 — Federal Data Job Market: role distribution,
+                    compensation, geography, and market trends.
+                </div>
+
+            </div>
+
+
+            <div class="dashboard">
+
+                <img
+                    src="GenAI_dashboard.png"
+                    alt="GenAI risk and audit extraction Power BI dashboard"
+                    class="dashboard-image"
+                >
+
+                <div class="dashboard-caption">
+                    Page 2 — Experimental GenAI risk and audit evidence
+                    extraction from job descriptions.
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         KEY FINDINGS
+    ========================== -->
+
+    <section class="section">
+
+        <div class="section-header">
+
+            <h2>Key Market Findings</h2>
+
+            <p>
+                Selected findings from the Power BI analysis.
+            </p>
+
+        </div>
+
+        <div class="findings-grid">
+
+            <div class="finding">
+
+                <div class="finding-value">
+                    60.1%
+                </div>
+
+                <div class="finding-title">
+                    Data Specialist Share
+                </div>
+
+                <p>
+                    Data Specialists represent the largest standardized
+                    role category in the analyzed dataset.
+                </p>
+
+            </div>
+
+
+            <div class="finding">
+
+                <div class="finding-value">
+                    $116K
+                </div>
+
+                <div class="finding-title">
+                    Full-Time Average
+                </div>
+
+                <p>
+                    Full-time postings average approximately
+                    $116.16K in the dashboard analysis.
+                </p>
+
+            </div>
+
+
+            <div class="finding">
+
+                <div class="finding-value">
+                    $59K
+                </div>
+
+                <div class="finding-title">
+                    Part-Time Average
+                </div>
+
+                <p>
+                    Part-time postings average approximately
+                    $59.28K.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="tag-row">
+
+            <span class="tag">
+                Data Specialists — 60.1%
+            </span>
+
+            <span class="tag">
+                Data Analysts — 16.89%
+            </span>
+
+            <span class="tag">
+                Data Engineers — 12.8%
+            </span>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         WHAT I BUILT
+    ========================== -->
+
+    <section class="section">
+
+        <div class="section-header">
+
+            <h2>What I Built</h2>
+
+            <p>
+                The project is organized into separate extraction,
+                transformation, loading, enrichment, and testing modules.
+            </p>
+
+        </div>
+
+
+        <div class="genai-grid">
+
+            <div class="genai-card">
+
+                <h3>1. Extract</h3>
+
+                <p>
+                    Built a USAJOBS API extractor that searches across
+                    12 data-related role categories and handles pagination,
+                    request timeouts, persistent sessions, and exponential
+                    backoff for transient API failures.
+                </p>
+
+                <p>
+                    The reference dataset contains
+                    <strong>5,588 raw postings</strong>.
+                </p>
+
+            </div>
+
+
+            <div class="genai-card">
+
+                <h3>2. Transform</h3>
+
+                <p>
+                    Standardized job titles into consistent career tracks,
+                    parsed locations, normalized salary fields, and
+                    standardized employment types and other structured
+                    attributes.
+                </p>
+
+            </div>
+
+
+            <div class="genai-card">
+
+                <h3>3. Load</h3>
+
+                <p>
+                    Loaded cleaned records into PostgreSQL using
+                    transactional updates and database constraints
+                    to support repeatable pipeline runs.
+                </p>
+
+                <p>
+                    Description hashing helps identify duplicate content
+                    published under different posting IDs.
+                </p>
+
+            </div>
+
+
+            <div class="genai-card">
+
+                <h3>4. Analyze</h3>
+
+                <p>
+                    Connected the structured PostgreSQL data to Power BI
+                    to analyze role demand, compensation, geography,
+                    employment type, and other market characteristics.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         GENAI
+    ========================== -->
+
+    <section class="section">
+
+        <div class="section-header">
+
+            <h2>Experimental GenAI Risk Extraction</h2>
+
+            <p>
+                An experimental enrichment layer for extracting structured
+                compliance and operational risk evidence from unstructured
+                job descriptions.
+            </p>
+
+        </div>
+
+
+        <div class="experimental">
+
+            <div class="experimental-title">
+                🧪 Pilot Feature
+            </div>
+
+            <p>
+                The Gemini enrichment worker was tested on a
+                <strong>26-posting pilot batch</strong> to manage API
+                rate limits and development costs. The worker is designed
+                for idempotent batch processing and can be extended to
+                additional postings.
+            </p>
+
+        </div>
+
+
+        <div class="genai-grid">
+
+            <div class="genai-card">
+
+                <h3>Structured extraction</h3>
+
+                <p>
+                    The <code>genai_enrichment.py</code> worker uses the
+                    Google GenAI SDK and Pydantic validation to extract
+                    structured risk attributes from free-text job
+                    descriptions.
+                </p>
+
+                <div class="tag-row">
+
+                    <span class="tag tag-ai">
+                        Security Clearance
+                    </span>
+
+                    <span class="tag tag-ai">
+                        Financial Access
+                    </span>
+
+                    <span class="tag tag-ai">
+                        Audit Controls
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="genai-card">
+
+                <h3>Source verification</h3>
+
+                <p>
+                    Extracted quote snippets are checked against the
+                    original job description using programmatic string
+                    validation. If the quote cannot be verified against
+                    the source text, the corresponding flag is reset.
+                </p>
+
+                <p>
+                    This creates a grounded evidence layer rather than
+                    storing unsupported LLM claims.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="findings-grid">
+
+            <div class="finding">
+
+                <div class="finding-value">
+                    26
+                </div>
+
+                <div class="finding-title">
+                    Pilot Postings
+                </div>
+
+                <p>
+                    Sample processed by the experimental GenAI worker.
+                </p>
+
+            </div>
+
+
+            <div class="finding">
+
+                <div class="finding-value">
+                    3
+                </div>
+
+                <div class="finding-title">
+                    Clearance Signals
+                </div>
+
+                <p>
+                    Explicit security-clearance requirements detected
+                    in the pilot.
+                </p>
+
+            </div>
+
+
+            <div class="finding">
+
+                <div class="finding-value">
+                    3
+                </div>
+
+                <div class="finding-title">
+                    Financial Access Signals
+                </div>
+
+                <p>
+                    Pilot postings requiring access to sensitive
+                    financial systems.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         ARCHITECTURE
+    ========================== -->
+
+    <section class="section">
+
+        <div class="section-header">
+
+            <h2>System Architecture</h2>
+
+            <p>
+                The AI enrichment layer sits alongside the main
+                structured-data workflow and feeds validated evidence
+                back into PostgreSQL for reporting.
+            </p>
+
+        </div>
+
+        <div class="architecture">
+
+<pre>
+                    USAJOBS API
+                         │
+                         ▼
+                 ┌──────────────┐
+                 │   Extract    │
+                 │  extract.py  │
+                 └──────┬───────┘
+                        │
+                        ▼
+                 ┌──────────────┐
+                 │  Transform   │
+                 │ transform.py │
+                 └──────┬───────┘
+                        │
+             ┌──────────┴──────────┐
+             │                     │
+             ▼                     ▼
+      Job Standardization    Skill Extraction
+             │                     │
+             └──────────┬──────────┘
+                        │
+                        ▼
+                 ┌──────────────┐
+                 │  PostgreSQL  │
+                 └──────┬───────┘
+                        │
+              ┌─────────┴─────────┐
+              │                   │
+              ▼                   ▼
+        Data Analysis       Gemini Enrichment
+        / Jupyter           genai_enrichment.py
+              │                   │
+              │                   ▼
+              │            Validated Evidence
+              │                   │
+              │                   ▼
+              │            PostgreSQL Risk
+              │              Attributes
+              │                   │
+              └─────────┬─────────┘
+                        ▼
+                  ┌──────────┐
+                  │ Power BI │
+                  └──────────┘
+</pre>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         DATABASE
+    ========================== -->
+
+    <section class="section">
+
+        <div class="section-header">
+
+            <h2>PostgreSQL Data Layer</h2>
+
+            <p>
+                The database separates core job data, extracted skills,
+                and GenAI-derived risk evidence.
+            </p>
+
+        </div>
+
+        <div class="genai-grid">
+
+            <div class="genai-card">
+
+                <h3>job_skills</h3>
+
+                <p>
+                    Primary posting records including job title,
+                    organization, salary, location, and description.
+                </p>
+
+            </div>
+
+            <div class="genai-card">
+
+                <h3>job_posting_skills</h3>
+
+                <p>
+                    Junction table mapping job postings to extracted
+                    skill keywords.
+                </p>
+
+            </div>
+
+            <div class="genai-card">
+
+                <h3>job_risk_attributes</h3>
+
+                <p>
+                    Stores structured risk flags, extracted systems,
+                    and source evidence generated by the Gemini worker.
+                </p>
+
+            </div>
+
+            <div class="genai-card">
+
+                <h3>vw_job_risk_evidence</h3>
+
+                <p>
+                    Reporting view joining posting metadata with
+                    risk-extraction evidence for downstream analysis.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         RESULTS
+    ========================== -->
+
+    <section class="section">
+
+        <div class="section-header">
+
+            <h2>Project Results</h2>
+
+            <p>
+                The main pipeline processes thousands of federal postings,
+                while the GenAI component remains explicitly labeled as
+                an experimental pilot.
+            </p>
+
+        </div>
+
+        <div class="result-grid">
+
+            <div class="result-card">
+
+                <div class="result-value">
+                    5,588
+                </div>
+
+                <div class="result-label">
+                    Raw API Postings
+                </div>
+
+            </div>
+
+
+            <div class="result-card">
+
+                <div class="result-value">
+                    60.1%
+                </div>
+
+                <div class="result-label">
+                    Data Specialist Share
+                </div>
+
+            </div>
+
+
+            <div class="result-card">
+
+                <div class="result-value">
+                    100%
+                </div>
+
+                <div class="result-label">
+                    Verified AI Quotes
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         TESTING
+    ========================== -->
+
+    <section class="section">
+
+        <div class="section-header">
+
+            <h2>Data Quality & Testing</h2>
+
+            <p>
+                The repository includes unit tests for both the core ETL
+                pipeline and experimental GenAI enrichment.
+            </p>
+
+        </div>
+
+        <div class="genai-grid">
+
+            <div class="genai-card">
+
+                <h3>ETL Tests</h3>
+
+                <ul>
+                    <li>Salary normalization</li>
+                    <li>Date parsing</li>
+                    <li>Location cleanup</li>
+                    <li>Deduplication logic</li>
+                </ul>
+
+            </div>
+
+
+            <div class="genai-card">
+
+                <h3>GenAI Tests</h3>
+
+                <ul>
+                    <li>Response validation</li>
+                    <li>Quote verification</li>
+                    <li>Rate-limit retry behavior</li>
+                    <li>Database upserts</li>
+                    <li>Mocked API responses</li>
+                </ul>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         REPOSITORY
+    ========================== -->
+
+    <section class="section">
+
+        <div class="section-header">
+
+            <h2>Repository Structure</h2>
+
+            <p>
+                Modular Python scripts separate extraction, transformation,
+                loading, database configuration, and GenAI enrichment.
+            </p>
+
+        </div>
+
+        <div class="tree">
+
+<pre>
 Job-Market-Analysis/
-├── etl_job_market.py      # ETL pipeline orchestrator
-├── extract.py             # USAJOBS API extractor
-├── transform.py           # Data cleaning & normalization
-├── load.py                # Database upsert logic
-├── genai_enrichment.py    # Gemini risk extraction worker (Experimental)
-├── engine.py              # PostgreSQL engine & schemas
-├── tests/                 # Unit test suite
+│
+├── etl_job_market.py
+│   └── ETL pipeline orchestrator
+│
+├── extract.py
+│   └── USAJOBS API extraction
+│
+├── transform.py
+│   └── Data cleaning & normalization
+│
+├── load.py
+│   └── PostgreSQL loading / upserts
+│
+├── genai_enrichment.py
+│   └── Gemini risk extraction worker
+│
+├── engine.py
+│   └── PostgreSQL engine & schemas
+│
+├── tests/
 │   ├── test_etl_job_market.py
 │   └── test_genai_enrichment.py
-├── experimentation/       # Analysis notebooks
+│
+├── experimentation/
 │   └── Pipeline_for_Data_Job_Market_Analysis.ipynb
-├── Federal_Data_Job_Market_Analysis.pbix  # Power BI report
-├── Dashboard.png          # Page 1 preview
-├── GenAI_dashboard.png    # Page 2 preview
-└── README.md              # Detailed repository documentation
-        </div>
-    </div>
+│
+├── Federal_Data_Job_Market_Analysis.pbix
+├── Dashboard.png
+├── GenAI_dashboard.png
+├── requirements.txt
+└── README.md
+</pre>
 
-    <div class="section">
-        <h2>What's Next</h2>
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         TECH STACK
+    ========================== -->
+
+    <section class="section">
+
+        <div class="section-header">
+
+            <h2>Tech Stack</h2>
+
+            <p>
+                Technologies used across ingestion, transformation,
+                storage, analysis, and experimental AI enrichment.
+            </p>
+
+        </div>
+
+        <div class="tag-row">
+
+            <span class="tag tag-tech">Python</span>
+            <span class="tag tag-tech">USAJOBS API</span>
+            <span class="tag tag-tech">pandas</span>
+            <span class="tag tag-tech">NumPy</span>
+
+            <span class="tag tag-tech">PostgreSQL</span>
+            <span class="tag tag-tech">SQLAlchemy</span>
+            <span class="tag tag-tech">psycopg2</span>
+
+            <span class="tag tag-tech">Power BI</span>
+
+            <span class="tag tag-ai">Gemini API</span>
+            <span class="tag tag-ai">Pydantic</span>
+
+            <span class="tag">python-dotenv</span>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         NEXT STEPS
+    ========================== -->
+
+    <section class="section">
+
+        <div class="section-header">
+
+            <h2>What's Next</h2>
+
+            <p>
+                Potential extensions to the current project.
+            </p>
+
+        </div>
+
         <ul>
-            <li>Scale experimental Gemini API risk extraction beyond the 26-posting pilot batch to cover the entire historical dataset.</li>
-            <li>Implement automated pipeline scheduling using GitHub Actions or Apache Airflow.</li>
-            <li>Expand LLM extraction prompts to categorize required technical tools (Python, SQL, AWS) from job text.</li>
+
+            <li>
+                Scale the experimental Gemini enrichment worker
+                beyond the pilot batch.
+            </li>
+
+            <li>
+                Schedule recurring ETL runs with GitHub Actions
+                or Apache Airflow.
+            </li>
+
+            <li>
+                Expand structured extraction to additional attributes
+                such as required technical skills and tools.
+            </li>
+
         </ul>
-    </div>
+
+    </section>
+
+
+    <!-- =========================
+         FOOTER
+    ========================== -->
+
+    <footer>
+
+        Federal Data Job Market Analysis ·
+        Built by Ha Tran · 2026
+
+    </footer>
+
 </div>
 
 </body>
