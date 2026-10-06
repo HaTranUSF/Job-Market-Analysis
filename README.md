@@ -94,6 +94,22 @@ We built a production ETL pipeline paired with an experimental LLM enrichment pr
 
 ````
 
+# 🧱 Databricks Medallion Setup
+
+A Databricks-ready version of this project is available under [databricks_pipeline/README.md](databricks_pipeline/README.md). It implements the recommended Bronze → Silver → Gold pattern for USAJOBS data and is designed to feed Power BI from Delta tables.
+
+Use the local workflow below to get started:
+
+```bash
+pip install -r requirements.txt
+copy .env.example .env
+python databricks_pipeline/run_pipeline.py
+```
+
+This writes raw job payloads to the Bronze layer, transforms them into normalized Silver tables, and creates Gold analytics tables for reporting.
+
+---
+
 # 📈 Dashboard & Key Findings
 
 The Power BI dashboard is structured as a **macro-to-micro drilldown**: Page 1 tracks overall market distribution and compensation, while Page 2 analyzes internal compliance and governance risks.
