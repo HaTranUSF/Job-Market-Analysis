@@ -6,7 +6,7 @@ An experimental Gemini worker also reads job descriptions for security clearance
 
 ## Project links
 
-- [Interactive project walkthrough](https://hatranusf.github.io/NextLeg/)
+- [Interactive project walkthrough](https://hatranusf.github.io/Job-Market-Analysis/)
 - [GitHub repository](https://github.com/HaTranUSF/Job-Market-Analysis)
 - [Power BI report](Federal_Data_Job_Market_Analysis.pbix)
 
