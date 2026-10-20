@@ -1,177 +1,229 @@
-﻿# 📊 Federal Data Job Market Analysis & ETL Pipeline
+# 📊 Data Job Market Analysis & ETL Pipeline
 
-This project collects federal data job postings from the USAJOBS API, cleans them with Python, and stores them in PostgreSQL for analysis in Power BI. It looks at hiring demand, salaries, locations, and employment types across federal agencies.
+## Company sources: Greenhouse, Lever, and AshbyHQ
 
-An experimental Gemini worker also reads job descriptions for security clearance, financial access, and audit requirements. It checks extracted quotes against the source text before saving the results.
+The pipeline now defaults to public company job boards. It downloads the
+[ATS directory](https://github.com/moonie0201/ats-directory) (`companies.jsonl`,
+CC0-1.0), selects all listed Greenhouse, Lever, and Ashby boards, and fetches
+postings directly from their public APIs. No ATS API keys or employer accounts
+are required. The directory supplies board identifiers and Lever regions.
 
-## Project links
+Collect a small sample without PostgreSQL:
 
-- [Interactive project walkthrough](https://hatranusf.github.io/Job-Market-Analysis/)
-- [GitHub repository](https://github.com/HaTranUSF/Job-Market-Analysis)
-- [Power BI report](Federal_Data_Job_Market_Analysis.pbix)
-
-## What the project looks at
-
-Federal agencies use different titles, salary formats, and location descriptions for similar jobs. Cleaning those fields makes it easier to compare postings and answer questions such as:
-
-- Which data roles have the most openings?
-- Where are those jobs located?
-- How does pay vary by role and employment type?
-- Which postings mention clearance, financial systems, or audit responsibilities?
-
-## Pipeline
-
-```text
-USAJOBS API
-    |
-    v
-Extract -> Transform -> PostgreSQL -> Analysis and Power BI
-                            |
-                            v
-                    Gemini enrichment
-                            |
-                            v
-                  Risk evidence reporting
+```powershell
+python -m pip install -r requirements.txt
+python etl_job_market.py --skip-load --board-limit 5 --output-dir data/sample
 ```
 
-### Extraction and cleaning
+`--board-limit` limits boards **per provider**, defaulting to `0` (all boards).
+Previously dead or unconfirmed boards are retried too. To choose providers:
 
-`extract.py` fetches postings with pagination, request timeouts, and retries. The reference dataset contained 5,588 raw postings.
+```powershell
+python etl_job_market.py --skip-load --providers greenhouse lever ashby --board-limit 0
+```
 
-`transform.py` maps job titles to standard role categories, parses U.S. locations, and standardizes dates, employment types, and remote eligibility. Hourly salaries below $500 are converted to annual estimates using 2,080 working hours per year.
+Four workers collect boards with a shared request gate and bounded HTTP retries.
+`--workers` accepts 1 through 16. `--active-boards-only` restricts collection to
+boards the directory last marked `ok`. Board counts are not unique company counts:
+one employer can have multiple boards, and the public directory is not exhaustive.
 
-The search covers Data Analyst, Data Scientist, Data Engineer, Business Analyst, Machine Learning Engineer, Analytics Engineer, Data Specialist, Research Analyst, Business Intelligence Analyst, Data Architect, Data Warehouse Engineer, and Database Administrator roles.
+The directory is cached in `data/directory/companies.jsonl`, with retrieval time,
+source URL, license, and SHA-256 in `companies.metadata.json`. Use
+`--refresh-directory` to download a new snapshot, or `--directory-path` for a
+saved JSONL directory. Original slug capitalization is preserved.
 
-Skills are extracted from descriptions and stored in `job_posting_skills`. They are excluded from the main dashboard because keyword matches can be noisy.
+Each run creates an immutable `data/runs/<UTC-run-id>/` folder containing:
 
-### Database loading
-
-`engine.py` defines the database tables, and `load.py` loads the cleaned records. Transactional upserts refresh existing postings while retaining historical records. Description hashes help identify duplicate content, and unique indexes prevent duplicate posting IDs and skill pairs.
-
-| Table or view | Contents |
+| Artifact | Purpose |
 | --- | --- |
-| `job_skills` | Posting titles, agencies, salaries, locations, and descriptions |
-| `job_posting_skills` | Links between postings and extracted skills |
-| `job_risk_attributes` | Risk flags, system names, and supporting quotes |
-| `vw_job_risk_evidence` | Posting metadata and risk evidence for Power BI |
+| `manifest.json` | Frozen boards, configuration, directory hash, run status, and summary |
+| `directory.jsonl` | Original company directory used for that run |
+| `raw/*.json.gz` | Compressed original postings for every successfully fetched board, including roles and countries excluded from analysis |
+| `boards/*.json` | Per-board checkpoints, timestamps, counts, and errors |
+| `job_skills.csv` | Normalized U.S. data-role postings, with `run_id` and `board_key` |
+| `job_posting_skills.csv` | One row per run/job/skill match |
+| `board_report.json` | All boards, including empty, failed, and transformation-failed boards |
+| `summary.json` | Provider coverage, posting counts, skill counts, and missing-field counts |
 
-### Experimental risk extraction
+Successful boards checkpoint immediately. Resume an interrupted run without
+refetching successful boards:
 
-`genai_enrichment.py` uses Gemini to extract clearance, financial access, and audit requirements from job descriptions.
+```powershell
+python etl_job_market.py --resume data/runs/<run-id>
+```
 
-- Pydantic and a response schema define the expected JSON structure.
-- `validate_response` checks supporting quotes against the original description and resets flags when the quotes fail validation.
-- Description hashes let later runs skip unchanged postings.
+To apply updated normalization to saved raw data without fetching boards again:
 
-Quote checks help catch unsupported evidence, but they do not guarantee that every interpretation is correct.
+```powershell
+python etl_job_market.py --reprocess data/runs/<run-id> --load
+```
 
-## Dashboard findings
+Reprocessing creates a new local run, records the original `collection_id`, source
+run, and transformation fingerprint, and preserves collection timestamps.
+PostgreSQL keeps one processed version per collection: loading a newer version
+replaces the older version transactionally, with a backup under `data/backups/`.
+Loading an older version over a newer one is rejected. A fresh API collection
+gets a new collection ID and adds another historical observation.
 
-The Power BI report has two pages. The first covers hiring volume, geography, and compensation. The second shows the risk extraction pilot.
+For an interrupted run, `--retry-failed` also retries failed boards. Finalized
+runs cannot be modified; start a new run to retry them. Resume always uses the
+original board list and geography settings. A process lock prevents simultaneous
+writers to the same run. Raw data, directory caches, and exports are gitignored.
 
-### Job market overview
+Convenient copies are published to `data/processed/` (or `--output-dir`).
+`jobs_overview.csv` is a compact, one-line-per-job view with combined skills and
+no long description or technical metadata. Use it for browsing in an editor or
+Excel. The complete `job_skills.csv` keeps quoted multiline descriptions and
+all provenance fields for analysis; physical text lines are not CSV row counts.
+`latest.json` points to the coherent, dated snapshot. `partial` means at least one
+board failed and the exports contain only successful boards. All-board failure
+preserves previous latest exports; a successful empty response is valid data.
+Runs are collection windows, not simultaneous observations. Re-run periodically
+to build history; older closed jobs cannot be recovered from the public APIs.
 
-The report's dataset showed:
+Titles are filtered for data, analytics, BI, business analyst, ML, database, ETL,
+and research analyst roles. Geography defaults to U.S. postings identified by a
+structured country or recognizable U.S. location. Secondary Ashby locations,
+Lever's location list, and Greenhouse offices are also checked, and all locations
+are retained in `locations_json`. Ambiguous locations,
+including generic remote locations, are excluded. `--include-unknown-country`
+retains these with an empty country; they are not confirmed U.S. opportunities.
 
-- Data Specialists accounted for 60.1% of openings, about 1.69K postings. Data Analysts made up 16.89%, about 0.48K, and Data Engineers made up 12.8%, about 0.36K.
-- Full-time positions averaged about $116.16K, compared with $59.28K for part-time positions.
-- Machine Learning Engineers and Research Analysts had the highest mid-range salary tiers.
+Provenance includes provider, board, original ID, source/application URLs,
+location, workplace type, and collection time. Stable namespaced IDs prevent
+collisions. Missing pay and dates stay empty. Greenhouse's update date is stored
+separately from publication dates; Ashby's date means last publication. ATS
+salaries retain original values and currency. `salary_period_raw` preserves the
+source period while `salary_period` standardizes known units. Separate
+`salary_min_annual_usd` and `salary_max_annual_usd` fields estimate annual USD pay
+only for explicit USD currencies and known periods (12 months, 52 weeks,
+260 days, or 2,080 hours per year). They are estimates, not guaranteed annual
+earnings. No exchange-rate conversion is performed. Greenhouse description-only
+pay is not parsed. Ashby salary is
+used only when one unambiguous summary salary component is supplied. Compare
+pay only within compatible currencies and periods.
 
-These figures describe the report's dataset and are not a live count of federal openings.
+For PostgreSQL loading, fill in `DB_*` settings in `.env` and use `--load`.
+Local collection is the default and needs no credentials. A saved run can be
+loaded later without network calls to job boards:
 
-### Risk extraction pilot
+```powershell
+python etl_job_market.py --load
+python etl_job_market.py --resume data/runs/<run-id> --load
+```
 
-The pilot processed 26 postings to limit API usage during development. It found three explicit clearance requirements and three roles requiring access to sensitive financial systems.
+The loader stores company job snapshots in the following tables. Each run loads in one transaction; reloading an identical run is a no-op.
+A conflicting fingerprint for an existing run ID is rejected.
 
-The Department of the Air Force and Department of the Navy had the most postings evaluated for audit controls in the sample. Independent agencies had the highest concentration of internal control mentions. The report records supporting source quotes for the extracted flags.
+```text
+Company directory -> Parallel board requests -> Raw checkpoints
+                                                    |
+                                                    v
+                                             Normalize + filter
+                                                    |
+                                                    v
+                                         Dated jobs + skills + coverage
+                                                    |
+                                                    v
+                                  PostgreSQL snapshot history -> Power BI views
+```
 
-The sample is small, so these results describe the pilot rather than the wider federal job market.
+| PostgreSQL object | Contents |
+| --- | --- |
+| `market_runs` | Run metadata, configuration, coverage, and content fingerprint |
+| `market_board_runs` | Every attempted board and its outcome, including zero-job boards |
+| `market_job_postings` | Historical posting snapshots keyed by `(run_id, id)` |
+| `market_job_skills` | Historical skill matches keyed by `(run_id, job_id, skill)` |
+| `vw_market_current_jobs` | Postings from each board's latest successful observation |
+| `vw_market_current_skills` | Skill matches for the current-job view |
+| `vw_market_job_history` | First/last observed dates, snapshot count, content-version count |
+| `vw_market_board_coverage` | Per-run and per-provider coverage totals |
 
-## Setup
+Current views retain the previous successful observation for failed boards;
+check `collected_at` for freshness. A later successful empty board removes its
+previous postings from the current view, while keeping history. These are observed
+listing states, not verified vacancy/closure dates. The normalized dataset is
+filtered by role and country, so disappearing from it can also mean a title or
+location changed. Stable IDs do not deduplicate employers across ATS migrations.
 
-Run these commands from the repository root.
+Connect Power BI to `vw_market_current_jobs` and `vw_market_current_skills` using
+`(run_id, id)` to `(run_id, job_id)`. Because Power BI relationships use one column,
+create a combined key in Power Query, or join on `id` when using only these current
+views. Use the history tables and coverage view for trends. The preserved [Power BI dashboard](Federal_Data_Job_Market_Analysis.pbix) remains available as a reference artifact.
 
-1. Clone the repository:
+### New pipeline modules and validation
 
-   ```bash
-   git clone https://github.com/HaTranUSF/Job-Market-Analysis.git
-   cd Job-Market-Analysis
-   ```
+Stage-specific files live in folders named after their ETL stage. Shared modules
+stay at the repository root:
 
-2. Install dependencies:
+```text
+extract/
+  collect_market.py       # Directory snapshot, API collection, checkpoints, resume
+transform/
+  market_snapshot.py      # Normalize saved responses, filter, export jobs/skills
+  job_features.py         # Role classification and skill keyword matching
+load/
+  market_store.py         # Transactional PostgreSQL history and reporting views
+etl_job_market.py         # Runs extract -> transform -> load
+ats_sources.py            # Shared API adapters and source normalization
+job_fields.py             # Shared posting column definitions
+http_client.py            # Shared HTTP requests and retries
+database.py               # Shared PostgreSQL connection configuration
+pipeline_io.py            # Shared board IDs, atomic writes, locking
+verify_market.py          # Validates local exports and database counts
+sql/market_analysis.sql   # Read-only analysis queries
+tests/                    # Unit and PostgreSQL integration tests
+```
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+`ats_sources.py` stays outside the stage folders because both extraction and
+transformation use it. Shared configuration, schema definitions, and file/database
+utilities also stay outside. Run commands from the repository root as before.
 
-3. Copy `.env.example` to `.env` and fill in your credentials. In PowerShell:
-
-   ```powershell
-   Copy-Item .env.example .env
-   ```
-
-   The pipeline uses these settings:
-
-   ```dotenv
-   USAJOBS_USER_AGENT=your-contact-email-or-application-name
-   USAJOBS_AUTH_KEY=your-usajobs-api-key
-   DB_USER=your-postgres-user
-   DB_PASSWORD=your-postgres-password
-   DB_HOST=localhost
-   DB_PORT=5432
-   DB_NAME=job_market
-   ```
-
-   Create the PostgreSQL database before running the load step. For optional risk enrichment, also set `GEMINI_API_KEY` and, if needed, `GEMINI_MODEL` in `.env`.
-
-4. Run the ETL pipeline:
-
-   ```bash
-   python etl_job_market.py
-   ```
-
-   To run extraction and transformation without loading PostgreSQL:
-
-   ```bash
-   python etl_job_market.py --skip-load
-   ```
-
-5. Run the optional enrichment worker after loading postings:
-
-   ```bash
-   python genai_enrichment.py --limit 10
-   ```
-
-   To reprocess a batch:
-
-   ```bash
-   python genai_enrichment.py --force --limit 10
-   ```
-
-## Tests
-
-The tests cover salary normalization, date and location parsing, deduplication, enrichment response validation, quote checks, retries, and database upserts. API responses are mocked in the enrichment tests.
-
-```bash
+```powershell
+python -m unittest discover -s tests
+# Optional PostgreSQL integration tests use disposable etl_test_* schemas:
+$env:TEST_POSTGRES = '1'
 python -m unittest discover -s tests
 ```
 
-## Repository structure
+Tests cover resume, pagination, regional endpoints, ID collisions, filters,
+salary units, secondary locations, immutable snapshots, transactional history,
+repeat loads, outage fallback, and successful empty boards. PostgreSQL tests
+require permission to create/drop their temporary schemas. Skills use keyword
+matches and do not distinguish required from preferred or incidental mentions.
 
-```text
-Job-Market-Analysis/
-  etl_job_market.py       # Pipeline runner
-  extract.py              # USAJOBS API requests
-  transform.py            # Cleaning and normalization
-  load.py                 # PostgreSQL loading
-  engine.py               # Database connection and schemas
-  genai_enrichment.py     # Experimental risk extraction
-  tests/                  # Unit tests
-  experimentation/        # Analysis notebooks
-  Federal_Data_Job_Market_Analysis.pbix
-  Dashboard.png           # Market overview preview
-  GenAI_dashboard.png     # Risk extraction preview
-  requirements.txt
-  .env.example
-  README.md
+Reconcile the latest snapshot with its manifest and PostgreSQL rows:
+
+```powershell
+python verify_market.py --database
 ```
+
+Use `--run-dir data/runs/<run-id>` for a specific snapshot, or omit `--database`
+for local validation only. Example read-only analysis queries are in
+[`sql/market_analysis.sql`](sql/market_analysis.sql).
+
+### State normalization and replacement reloads
+
+`transform/locations.py` recognizes explicit state names/codes and a curated city
+lookup, including labels such as Boston, Mountain View, and San Francisco Bay
+Area. Each enriched entry in `locations_json` records its `state_source`.
+City lookups are inferences, not verified addresses. Ambiguous city names and
+country-only remote listings retain an unknown state.
+
+The main jobs table selects the first supported U.S. location with a known state.
+For all supported states, use PostgreSQL's `vw_market_current_locations` or
+`data/processed/job_locations.csv`. These contain one row per run/job/state.
+Relate `job_id` to current jobs' `id` and count distinct job IDs per state.
+Multi-state jobs appear in each applicable state, so state totals are not additive.
+
+To back up and overwrite all existing company-market snapshots with one fresh
+collection, rather than append another collection to history:
+
+```powershell
+python etl_job_market.py --refresh-directory --load --replace-market-data
+```
+
+Replacement happens in one transaction. If loading fails, previous rows remain.
+Backups go to `data/backups/`; local dated run archives remain available.
+An empty job snapshot is rejected. Failed boards appear in the new report, but
+their previous observations are not retained in replacement mode.

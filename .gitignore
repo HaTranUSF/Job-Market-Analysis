@@ -1,4 +1,5 @@
 .env
+.venv/
 .env.*
 !.env.example
 .ipynb_checkpoints/
@@ -7,6 +8,11 @@ __pycache__/
 *$py.class
 .DS_Store
 /data/processed/*.csv
-/experimentation/airflow-jobs-pipeline/logs/
+/data/directory/
+/data/processed/*.json
+/data/sample/
+/data/runs/
+/data/backups/
+/data/pipeline.log
 .pytest_cache/
 .coverage
