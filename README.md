@@ -1,4 +1,4 @@
-﻿# 📊 Federal Data Job Market Analysis & ETL Pipeline
+# 📊 Federal Data Job Market Analysis & ETL Pipeline
 
 This project collects federal data job postings from the USAJOBS API, cleans them with Python, and stores them in PostgreSQL for analysis in Power BI. It looks at hiring demand, salaries, locations, and employment types across federal agencies.
 
@@ -71,13 +71,18 @@ The Power BI report has two pages. The first covers hiring volume, geography, an
 
 ### Job market overview
 
-The report's dataset showed:
+![Federal data job market dashboard](Dashboard.png)
 
-- Data Specialists accounted for 60.1% of openings, about 1.69K postings. Data Analysts made up 16.89%, about 0.48K, and Data Engineers made up 12.8%, about 0.36K.
-- Full-time positions averaged about $116.16K, compared with $59.28K for part-time positions.
-- Machine Learning Engineers and Research Analysts had the highest mid-range salary tiers.
+The updated report saved on November 1, 2026 shows:
 
-These figures describe the report's dataset and are not a live count of federal openings.
+- Among actively hiring positions, Data Specialists account for 54.26% (191 postings), followed by Data Engineers at 18.75% (66), Data Analysts at 13.64% (48), and Data Scientists at 5.68% (20).
+- The separate Nationwide Job Counts card displays 111. This measure has a different scope from the active-role chart and should not be used as its denominator.
+- Full-time and on-call positions have the highest average salary by employment type, at roughly $115K and $110K. Intermittent, part-time, and shift-work averages are around $55K–$60K.
+- Machine Learning Engineers lead average salary by role, at roughly $165K; Research Analysts, Business Intelligence Analysts, and Data Architects follow around $130K.
+- The compensation trend chart spans late 2025 through October 2026, fluctuating roughly between $94K and $123K and ending near $114K. These are averages across the displayed posting cohorts, not pay changes for the same workers.
+- The state charts separate actively hiring position counts from average salary. Their shading supports geographic comparison; it does not establish one state as the leader on both measures.
+
+These figures describe the saved report's displayed view, not a live count of federal openings. Role and state hiring charts filter for `Is_Actively_Hiring = Active`; salary visuals use their own report context. Salary figures are rounded readings of the displayed charts.
 
 ### Risk extraction pilot
 
